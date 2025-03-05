@@ -30,13 +30,23 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG") 
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 CORS_ALLOW_ALL_ORIGINS = True
 
+ASGI_APPLICATION = 'pfebackend.asgi.application'
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -50,6 +60,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'djoser',
     'users',
+    'chat',
 ]
 
 MIDDLEWARE = [
@@ -150,10 +161,10 @@ DJOSER = {
     'PASSWORD_RESET_CONFIRM_RETYPE': True,
     'TOKEN_MODEL': None,
     'SERIALIZERS':{
-        "user_create": "accounts.serializers.UserCreateSerializer",  # custom serializer
-        "user": "djoser.serializers.UserSerializer",
-        "current_user": "djoser.serializers.UserSerializer",
-        "user_delete": "djoser.serializers.UserSerializer",
+        "user_create": "users.serializers.UserCreateSerializer",  # custom serializer
+        "user": "users.serializers.UserSerializer",
+        # "current_user": "djoser.serializers.UserSerializer",
+        # "user_delete": "djoser.serializers.UserSerializer",
            },
     'HIDE_USERS': True,
 }
@@ -163,5 +174,6 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
     "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
     "SIGNING_KEY": SECRET_KEY,
+    'TOKEN_OBTAIN_SERIALIZER': 'users.serializers.CustomTokenObtainPairSerializer',
 }
 AUTH_USER_MODEL = "users.User"

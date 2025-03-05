@@ -26,10 +26,18 @@ class UserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
     
 class User(AbstractBaseUser):
+    USER_TYPE_CHOICES = (
+        ('student', 'Student'),
+        ('teacher', 'Teacher'),
+        ('administrator', 'Administrator')
+    )
+    
+    
     email = models.EmailField(unique=True, max_length=255)
     username = models.CharField(max_length=50, unique = True)
     first_name = models.CharField(max_length=50, unique = True)
     last_name = models.CharField(max_length=50, unique = True)
+    user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES)
     is_active = models.BooleanField(default = True)
     is_staff = models.BooleanField(default = False)
     is_superuser = models.BooleanField(default = False)
@@ -50,3 +58,16 @@ class User(AbstractBaseUser):
     
     def __str__(self):
         return f"{self.first_name} | {self.email}"
+    
+
+class Student(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student')
+    # Additional fields like grade, etc.
+
+class Teacher(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='teacher')
+    # Additional fields like subject, etc.
+    
+class Administrator(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='administrator')
+    # Additional fiels like ... ect.
