@@ -14,9 +14,13 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.security.websocket import AllowedHostsOriginValidator
 from channels.auth import AuthMiddlewareStack
 from chat.routing import websocket_urlpatterns
+from pfebackend.settings import base
 
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'pfebackend.settings.base')
+if base.DEBUG:
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'pfebackend.settings.dev')
+else:
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'pfebackend.settings.prod')
+    
 
 django_asgi_app = get_asgi_application()
 
