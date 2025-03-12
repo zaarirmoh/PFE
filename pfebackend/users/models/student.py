@@ -16,7 +16,7 @@ class Student(models.Model):
         ('graduated', 'Graduated'),
     )
 
-    matricule = models.CharField(max_length=20, unique=True, default='ZAARIR')
+    matricule = models.CharField(max_length=20, unique=False, default='ZAARIR')
     enrollment_year = models.PositiveIntegerField(help_text="Year of admission", default=2014)
     academic_program = models.CharField(max_length=20, choices=ACADEMIC_PROGRAM_CHOICES)
     current_year = models.PositiveSmallIntegerField(help_text="Current year in the program", default=1)
