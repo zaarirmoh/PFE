@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG") 
+DEBUG = os.getenv("DEBUG")
 
 ASGI_APPLICATION = 'pfebackend.asgi.application'
 CHANNEL_LAYERS = {
@@ -26,6 +26,10 @@ CHANNEL_LAYERS = {
 
 INSTALLED_APPS = [
     'daphne',
+    'unfold',  # before django.contrib.admin
+    'unfold.contrib.filters',  # optional, if special filters are needed
+    'unfold.contrib.forms',  # optional, if special form elements are needed
+    'unfold.contrib.inlines',  # optional, if special inlines are needed
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,9 +42,15 @@ INSTALLED_APPS = [
     # 'rest_framework_swagger',
     'drf_yasg',
     'djoser',
+    # local
     'users',
     'authentication',
     'chat',
+    'documents',
+    'notifications',
+    'projects',
+    'teams',
+    'common',
 ]
 
 MIDDLEWARE = [
@@ -147,7 +157,8 @@ SIMPLE_JWT = {
 }
 AUTH_USER_MODEL = "users.User"
 
-# STATIC_URL = '/static/'
-# STATICFILES_DIRS = [
-#     BASE_DIR / 'static',
-# ]
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
