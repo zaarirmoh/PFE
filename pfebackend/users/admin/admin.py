@@ -1,9 +1,9 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from unfold.admin import ModelAdmin
 from django.contrib import messages
 from django.db import transaction
 from django.shortcuts import redirect
-
 from .admin_forms import CustomUserChangeForm, CustomUserCreationForm
 from .admin_inlines import (
     StudentProfileInline,
@@ -13,6 +13,8 @@ from .admin_inlines import (
 from users.models import User
 from users.serializers.base import BaseProfileSerializer
 
+# admin.site.unregister(User)
+
 # Dictionary mapping user types to their corresponding inline classes
 USER_TYPE_INLINES = {
     'student': StudentProfileInline,
@@ -20,7 +22,7 @@ USER_TYPE_INLINES = {
     'administrator': AdministratorProfileInline,
 }
 
-class CustomUserAdmin(BaseUserAdmin):
+class CustomUserAdmin(BaseUserAdmin, ModelAdmin):
     form = CustomUserChangeForm
     add_form = CustomUserCreationForm
     
@@ -35,7 +37,7 @@ class CustomUserAdmin(BaseUserAdmin):
         ('Personal info', {'fields': ('first_name', 'last_name')}),
         ('User Type', {'fields': ('user_type',)}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser')}),
-        ('Important dates', {'fields': ('last_login',)}),
+        # ('Important dates', {'fields': ('last_login',)}),
     )
     
     add_fieldsets = (
