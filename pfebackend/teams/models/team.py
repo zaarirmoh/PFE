@@ -3,7 +3,6 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from common.models import AuditableModel
 from users.models import Student
-from .team_membership import TeamMembership
 
 
 class Team(AuditableModel):
@@ -55,6 +54,8 @@ class Team(AuditableModel):
         - Validates that the owner is a student with active status
         - Sets the academic constraints from the owner's profile
         """
+        from .team_membership import TeamMembership
+        
         # Check if the owner is a student
         try:
             student = owner.student

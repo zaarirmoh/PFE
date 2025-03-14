@@ -1,11 +1,11 @@
-from .team_invitation import TeamInvitation, InvitationResponseSerializer
-from .team_membership import TeamMembership
-from .team import Team
+from .team_invitation import TeamInvitationSerializer, InvitationResponseSerializer
+from .team_membership import TeamMembershipSerializer
+from .team import TeamSerializer
 
 
 __all__ = [
-    'Team',
-    'TeamInvitation',
-    'TeamMembership',
+    'TeamSerializer',
+    'TeamInvitationSerializer',
+    'TeamMembershipSerializer',
     'InvitationResponseSerializer',
 ]

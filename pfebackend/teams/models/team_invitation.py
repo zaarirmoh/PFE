@@ -4,7 +4,6 @@ from django.core.exceptions import ValidationError
 from common.models import TimeStampedModel
 from users.models import Student
 from .team import Team
-from .team_membership import TeamMembership
 
 
 class TeamInvitation(TimeStampedModel):
@@ -84,6 +83,9 @@ class TeamInvitation(TimeStampedModel):
         """
         Accept the invitation and create a new team membership
         """
+        from .team_membership import TeamMembership
+
+        
         # Verify the invitation is pending
         if self.status != self.STATUS_PENDING:
             raise ValidationError("Only pending invitations can be accepted.")
