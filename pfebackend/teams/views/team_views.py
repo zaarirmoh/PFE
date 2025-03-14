@@ -11,7 +11,7 @@ from teams.permissions import IsTeamMember, IsTeamOwner
 from teams.services import TeamService
 from notifications.services import NotificationService
 from common.pagination import StaticPagination
-
+from users.permissions import IsStudent
 
 class TeamListCreateView(ListCreateAPIView):
     """
@@ -21,10 +21,16 @@ class TeamListCreateView(ListCreateAPIView):
     POST /api/teams/ - Create a new team (automatically makes creator the owner)
     """
     serializer_class = TeamSerializer
-    permission_classes = [permissions.IsAuthenticated]
     pagination_class = StaticPagination
-    
     queryset = Team.objects.all()
+    
+    def get_permissions(self):
+        """
+        Apply IsStudent permission only for POST requests.
+        """
+        if self.request.method == 'POST':
+            return [permissions.IsAuthenticated(), IsStudent()]
+        return [permissions.IsAuthenticated()]
     
     # def get_queryset(self):
     #     """Return teams the current user is a member of"""

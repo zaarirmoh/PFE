@@ -73,7 +73,7 @@ class TeamInvitationService:
                 }
                 
                 # Create action URL for the invitation
-                action_url = f"/teams/invitations/{invitation.id}/"
+                action_url = f"/invitations/{invitation.id}/"
                 
                 NotificationService.create_and_send(
                     recipient=invitee,

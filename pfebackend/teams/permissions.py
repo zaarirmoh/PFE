@@ -67,3 +67,24 @@ class IsTeamOwnerOrInviter(permissions.BasePermission):
             user=request.user,
             role=TeamMembership.ROLE_OWNER
         ).exists()
+
+class IsJoinRequestRequester(permissions.BasePermission):
+    """
+    Permission check for join request requester.
+    """
+    def has_object_permission(self, request, view, obj):
+        # Make sure the user is the requester
+        return obj.requester == request.user
+
+
+class IsTeamOwnerForJoinRequest(permissions.BasePermission):
+    """
+    Permission check for team owners related to join requests.
+    """
+    def has_object_permission(self, request, view, obj):
+        # Check if user is an owner of the team
+        return TeamMembership.objects.filter(
+            team=obj.team,
+            user=request.user,
+            role=TeamMembership.ROLE_OWNER
+        ).exists()
