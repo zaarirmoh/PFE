@@ -28,7 +28,7 @@ class TeamListCreateView(ListCreateAPIView):
     
     # def get_queryset(self):
     #     """Return teams the current user is a member of"""
-    #     return Team.objects.all()
+    #     return TeamService.get_user_teams(self.request.user)
     
     def perform_create(self, serializer):
         """Create a new team with the current user as owner"""
@@ -117,106 +117,3 @@ class TeamDetailView(RetrieveUpdateDestroyAPIView):
                 'event_type': 'team_deleted'
             }
         )
-
-
-
-
-
-# from rest_framework import permissions, status
-# from rest_framework.generics import (
-#     RetrieveUpdateDestroyAPIView,
-#     ListCreateAPIView,
-# )
-# from rest_framework.response import Response
-# from django.db import transaction
-
-# from teams.models import Team
-# from teams.serializers import TeamSerializer
-# from teams.permissions import IsTeamMember, IsTeamOwner
-# from teams.services import create_team
-# from common.pagination import StaticPagination
-# from notifications.services import create_notification
-
-
-# class TeamListCreateView(ListCreateAPIView):
-#     """
-#     Create a new team or list teams
-    
-#     GET /api/teams/ - List teams the current user is a member of
-#     POST /api/teams/ - Create a new team (automatically makes creator the owner)
-#     """
-#     serializer_class = TeamSerializer
-#     permission_classes = [permissions.IsAuthenticated]
-#     pagination_class = StaticPagination
-    
-#     def get_queryset(self):
-#         # Return teams the current user is a member of
-#         return Team.objects.filter(members=self.request.user)
-    
-#     @transaction.atomic
-#     def perform_create(self, serializer):
-#         """Create a new team with the current user as owner"""
-#         team = create_team(
-#             name=serializer.validated_data['name'],
-#             description=serializer.validated_data.get('description', ''),
-#             owner=self.request.user
-#         )
-        
-#         # Set serializer instance for proper response
-#         serializer.instance = team
-        
-#         # Send notification to owner
-#         create_notification(
-#             recipient=self.request.user,
-#             content=f"You created the team '{team.name}'",
-#             notification_type='activity',
-#             related_object=team,
-#             priority='low'
-#         )
-
-
-# class TeamDetailView(RetrieveUpdateDestroyAPIView):
-#     """
-#     Retrieve, update, or delete a team
-    
-#     GET /api/teams/{id}/ - View team details (members only)
-#     PUT /api/teams/{id}/ - Update team (owners only)
-#     DELETE /api/teams/{id}/ - Delete team (owners only)
-#     """
-#     queryset = Team.objects.all()
-#     serializer_class = TeamSerializer
-#     permission_classes = [permissions.IsAuthenticated, IsTeamMember]
-#     lookup_field = 'id'
-
-#     def get_permissions(self):
-#         """Use different permission classes based on the request method"""
-#         if self.request.method in ['PUT', 'PATCH', 'DELETE']:
-#             return [permissions.IsAuthenticated(), IsTeamOwner()]
-#         return super().get_permissions()
-
-#     def perform_update(self, serializer):
-#         """Update team and create notification if name changed"""
-#         team = self.get_object()
-#         old_name = team.name
-#         updated_team = serializer.save(updated_by=self.request.user)
-        
-#         if old_name != updated_team.name:
-#             create_notification(
-#                 recipient=self.request.user,
-#                 content=f"Team name changed from '{old_name}' to '{updated_team.name}'",
-#                 notification_type='system',
-#                 related_object=updated_team,
-#                 priority='medium'
-#             )
-
-#     def perform_destroy(self, instance):
-#         """Delete team and create notification"""
-#         team_name = instance.name
-#         instance.delete()
-        
-#         create_notification(
-#             recipient=self.request.user,
-#             content=f"Team '{team_name}' was deleted",
-#             notification_type='system',
-#             priority='high'
-#         )
