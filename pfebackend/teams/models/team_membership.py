@@ -30,12 +30,20 @@ class TeamMembership(models.Model):
     
     def clean(self):
         """
-        Validate that the user meets the team's academic constraints:
-        - User must be a student
-        - Student must have active status
-        - Student must be in the same academic year and program as the team
+        Validate that:
+        - The user meets the team's academic constraints
+        - The team has not reached its member limit
         """
         super().clean()
+        
+        # Skip team size validation for owners (needed for team creation)
+        if self.role != self.ROLE_OWNER:
+            # Check if team is already at capacity
+            current_count = self.team.members.count()
+            if current_count >= self.team.maximum_members:
+                raise ValidationError(
+                    f"Team '{self.team.name}' has reached its maximum capacity of {self.team.maximum_members} members."
+                )
         
         # Verify that user is a student
         try:

@@ -43,6 +43,11 @@ class StudentListView(generics.ListAPIView):
         
         # Apply the filters to the queryset
         queryset = queryset.filter(filters)
+        
+        has_no_team = self.request.query_params.get('has_no_team')
+        if has_no_team and has_no_team.lower() in ['true', '1', 'yes']:
+            queryset = queryset.exclude(teams__isnull=False)
+
             
         return queryset
     

@@ -13,11 +13,13 @@ class TeamInvitation(TimeStampedModel):
     STATUS_PENDING = 'pending'
     STATUS_ACCEPTED = 'accepted'
     STATUS_DECLINED = 'declined'
+    STATUS_EXPIRED = 'expired'
     
     STATUS_CHOICES = (
         (STATUS_PENDING, 'Pending'),
         (STATUS_ACCEPTED, 'Accepted'),
         (STATUS_DECLINED, 'Declined'),
+        (STATUS_EXPIRED, 'Expired'),
     )
     
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='invitations')
@@ -32,6 +34,7 @@ class TeamInvitation(TimeStampedModel):
         related_name='received_invitations'
     )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    message = models.TextField(blank=True, help_text="Optional message from the inviter")
     
     class Meta:
         unique_together = ('team', 'invitee', 'status')
@@ -44,12 +47,23 @@ class TeamInvitation(TimeStampedModel):
         Validate that:
         - Inviter is a team member
         - Invitee meets the team's academic constraints
+        - Team has not reached capacity
         """
         super().clean()
         
         # Verify inviter is a team member
         if not self.team.members.filter(id=self.inviter.id).exists():
             raise ValidationError("Only team members can send invitations.")
+        
+        # Verify invitee is not already a team member
+        if self.team.members.filter(id=self.invitee.id).exists():
+            raise ValidationError(f"{self.invitee.username} is already a member of this team.")
+        
+        # Check if team is already at capacity
+        if not self.team.has_capacity:
+            raise ValidationError(
+                f"Team '{self.team.name}' has reached its maximum capacity of {self.team.maximum_members} members."
+            )
         
         # Verify invitee is a student
         try:
@@ -85,10 +99,17 @@ class TeamInvitation(TimeStampedModel):
         """
         from .team_membership import TeamMembership
 
-        
         # Verify the invitation is pending
         if self.status != self.STATUS_PENDING:
             raise ValidationError("Only pending invitations can be accepted.")
+        
+        # Check if team is at capacity (rechecking here for safety)
+        if not self.team.has_capacity:
+            self.status = self.STATUS_EXPIRED
+            self.save()
+            raise ValidationError(
+                f"Team '{self.team.name}' has reached its maximum capacity of {self.team.maximum_members} members."
+            )
         
         # Create the team membership
         TeamMembership.objects.create(

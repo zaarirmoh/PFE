@@ -13,11 +13,13 @@ class TeamJoinRequest(TimeStampedModel):
     STATUS_PENDING = 'pending'
     STATUS_ACCEPTED = 'accepted'
     STATUS_DECLINED = 'declined'
+    STATUS_EXPIRED = 'expired'
     
     STATUS_CHOICES = (
         (STATUS_PENDING, 'Pending'),
         (STATUS_ACCEPTED, 'Accepted'),
         (STATUS_DECLINED, 'Declined'),
+        (STATUS_EXPIRED, 'Expired'),
     )
     
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='join_requests')
@@ -41,12 +43,19 @@ class TeamJoinRequest(TimeStampedModel):
         Validate that:
         - Requester is not already a team member
         - Requester meets the team's academic constraints
+        - Team has not reached capacity
         """
         super().clean()
         
         # Verify requester is not already a team member
         if self.team.members.filter(id=self.requester.id).exists():
             raise ValidationError("You are already a member of this team.")
+        
+        # Check if team is already at capacity
+        if not self.team.has_capacity:
+            raise ValidationError(
+                f"Team '{self.team.name}' has reached its maximum capacity of {self.team.maximum_members} members."
+            )
         
         # Verify requester is a student
         try:
@@ -85,6 +94,14 @@ class TeamJoinRequest(TimeStampedModel):
         # Verify the request is pending
         if self.status != self.STATUS_PENDING:
             raise ValidationError("Only pending requests can be accepted.")
+        
+        # Check if team is at capacity (rechecking here for safety)
+        if not self.team.has_capacity:
+            self.status = self.STATUS_EXPIRED
+            self.save()
+            raise ValidationError(
+                f"Team '{self.team.name}' has reached its maximum capacity of {self.team.maximum_members} members."
+            )
         
         # Create the team membership
         TeamMembership.objects.create(

@@ -1,4 +1,4 @@
-from rest_framework import permissions, status
+from rest_framework import permissions, status, filters
 from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
     ListCreateAPIView,
@@ -12,17 +12,61 @@ from teams.services import TeamService
 from notifications.services import NotificationService
 from common.pagination import StaticPagination
 from users.permissions import IsStudent
+from django_filters.rest_framework import DjangoFilterBackend
+from teams.filters import TeamFilter
+from django.db.models import Count, F
+
 
 class TeamListCreateView(ListCreateAPIView):
     """
-    Create a new team or list teams
+    List and create teams with comprehensive filtering.
     
-    GET /api/teams/ - List teams the current user is a member of
-    POST /api/teams/ - Create a new team (automatically makes creator the owner)
+    ## Endpoints
+    GET /api/teams/ - List teams with filtering options
+    POST /api/teams/ - Create a new team (creator becomes owner)
+    
+    ## Query Parameters
+    - Basic filters:
+        - `name` - Filter by name (contains, case-insensitive)
+        - `description` - Filter by description (contains, case-insensitive)
+        - `academic_year` - Filter by academic year
+        - `academic_program` - Filter by academic program
+    
+    - Date filters:
+        - `created_after` - Teams created after specified date (YYYY-MM-DD)
+        - `created_before` - Teams created before specified date (YYYY-MM-DD)
+        - `updated_after` - Teams updated after specified date (YYYY-MM-DD)
+        - `updated_before` - Teams updated before specified date (YYYY-MM-DD)
+    
+    - Boolean filters:
+        - `is_member` - Teams where current user is a member (true/false)
+        - `has_capacity` - Teams with capacity for more members (true/false)
+        - `is_owner` - Teams where current user is the owner (true/false)
+        - `match_student_profile` - Teams matching current user's academic year and program (true/false)
+    
+    - Member count filters:
+        - `min_members` - Teams with at least this many members
+        - `max_members` - Teams with at most this many members
+        - `maximum_size` - Filter by team's maximum allowed size
+    
+    - Pagination:
+        - `page` - Page number
+        - `page_size` - Number of results per page
+    
+    - Sorting:
+        - `ordering` - Sort by field (prefix with - for descending)
+          Examples: ordering=name, ordering=-created_at
+    
+    - Searching:
+        - `search` - Search in name and description
     """
     serializer_class = TeamSerializer
     pagination_class = StaticPagination
-    queryset = Team.objects.all()
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_class = TeamFilter
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'created_at']
+    ordering = ['name']
     
     def get_permissions(self):
         """
@@ -32,9 +76,12 @@ class TeamListCreateView(ListCreateAPIView):
             return [permissions.IsAuthenticated(), IsStudent()]
         return [permissions.IsAuthenticated()]
     
-    # def get_queryset(self):
-    #     """Return teams the current user is a member of"""
-    #     return TeamService.get_user_teams(self.request.user)
+    def get_queryset(self):
+        """Return teams with proper filtering and optimal performance"""
+        queryset = Team.objects.all()
+        # .prefetch_related('members', 'teammembership_set')
+        return queryset
+
     
     def perform_create(self, serializer):
         """Create a new team with the current user as owner"""
