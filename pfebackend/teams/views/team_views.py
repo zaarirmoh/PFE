@@ -1,10 +1,8 @@
-from rest_framework import permissions, status, filters
+from rest_framework import permissions, filters
 from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
     ListCreateAPIView,
 )
-from rest_framework.response import Response
-
 from teams.models import Team
 from teams.serializers import TeamSerializer
 from teams.permissions import IsTeamMember, IsTeamOwner
@@ -14,8 +12,6 @@ from common.pagination import StaticPagination
 from users.permissions import IsStudent
 from django_filters.rest_framework import DjangoFilterBackend
 from teams.filters import TeamFilter
-from django.db.models import Count, F
-
 
 class TeamListCreateView(ListCreateAPIView):
     """

@@ -42,6 +42,7 @@ urlpatterns = [
     
     path('api/', include('teams.urls')),
     path('api/', include('users.urls')),
+    path('api/', include('timeline.urls')),
 
     re_path(r'^api/auth/', include('djoser.urls')),
     re_path(r'^api/auth/', include('djoser.urls.jwt')),
