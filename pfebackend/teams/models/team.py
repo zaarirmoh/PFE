@@ -31,6 +31,7 @@ class Team(AuditableModel):
         choices=Student.ACADEMIC_PROGRAM_CHOICES,
         help_text="Academic program requirement for team members"
     )
+    is_verified = models.BooleanField(default=False)
     
     # Maximum members setting is now handled by TeamSettings globally
     # This field indicates the specific limit for this team, which defaults to the global setting

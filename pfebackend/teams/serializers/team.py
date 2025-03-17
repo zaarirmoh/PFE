@@ -19,11 +19,12 @@ class TeamSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'description', 'created_at', 'updated_at',
             'academic_year', 'academic_program', 'maximum_members',
-            'owner', 'member_count', 'has_capacity'
+            'owner', 'member_count', 'has_capacity', 'is_verified',
         ]
         read_only_fields = [
             'id', 'created_at', 'updated_at', 
-            'academic_year', 'academic_program', 'maximum_members'
+            'academic_year', 'academic_program', 'maximum_members',
+            'is_verified',
         ]
         
     def get_owner(self, obj):

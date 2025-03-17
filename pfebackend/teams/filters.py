@@ -14,6 +14,7 @@ class TeamFilter(filters.FilterSet):
     description = filters.CharFilter(lookup_expr='icontains')
     academic_year = filters.NumberFilter()
     academic_program = filters.CharFilter()
+    is_verified = filters.BooleanFilter()
     
     # Date filters
     created_after = filters.DateTimeFilter(field_name='created_at', lookup_expr='gte')
@@ -36,9 +37,9 @@ class TeamFilter(filters.FilterSet):
         model = Team
         fields = [
             'name', 'description', 'academic_year', 'academic_program',
-            'created_after', 'created_before', 'updated_after', 'updated_before',
-            'is_member', 'has_capacity', 'is_owner', 'match_student_profile',
-            'min_members', 'max_members', 'maximum_size'
+            'is_verified', 'created_after', 'created_before', 'updated_after', 
+            'updated_before', 'is_member', 'has_capacity', 'is_owner',
+            'match_student_profile', 'min_members', 'max_members', 'maximum_size'
         ]
     
     def filter_is_member(self, queryset, name, value):

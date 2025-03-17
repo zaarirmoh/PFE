@@ -27,13 +27,14 @@ class CustomUserAdmin(BaseUserAdmin, ModelAdmin):
     add_form = CustomUserCreationForm
     
     list_display = ('email', 'username', 'user_type', 'is_active', 'is_staff', 'is_superuser')
+    exclude = ('password',)
     list_filter = ('user_type', 'is_active', 'is_staff', 'is_superuser')
     
     # Set filter_horizontal to an empty tuple since we don't have groups or user_permissions
     filter_horizontal = ()
     
     fieldsets = (
-        (None, {'fields': ('email', 'username', 'password')}),
+        (None, {'fields': ('email', 'username')}),
         ('Personal info', {'fields': ('first_name', 'last_name')}),
         ('User Type', {'fields': ('user_type',)}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser')}),

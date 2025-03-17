@@ -27,6 +27,7 @@ class TeamListCreateView(ListCreateAPIView):
         - `description` - Filter by description (contains, case-insensitive)
         - `academic_year` - Filter by academic year
         - `academic_program` - Filter by academic program
+        - `is_verified` - Filter by verification status (true/false)
     
     - Date filters:
         - `created_after` - Teams created after specified date (YYYY-MM-DD)
