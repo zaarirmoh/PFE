@@ -35,10 +35,28 @@ class CustomUserAdmin(BaseUserAdmin, ModelAdmin):
     
     fieldsets = (
         (None, {'fields': ('email', 'username')}),
-        ('Personal info', {'fields': ('first_name', 'last_name')}),
-        ('User Type', {'fields': ('user_type',)}),
-        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser')}),
-        # ('Important dates', {'fields': ('last_login',)}),
+        (
+            'Personal info',
+            {
+                'fields': ('first_name', 'last_name'),
+                'classes': ('collapse',)
+            }
+        ),
+        (
+            'User Type',
+            {
+                'fields': ('user_type',),
+                'classes': ('collapse',)
+            }
+        ),
+        (
+            'Permissions',
+            {
+                'fields': ('is_active', 'is_staff', 'is_superuser'),
+                'classes': ('collapse',),  # Changed from 'callapse' to 'tab'
+                'description': 'Manage user permissions and access levels'
+            }
+        ),
     )
     
     add_fieldsets = (
