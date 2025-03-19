@@ -20,9 +20,14 @@ services:
       timeout: 30s
       retries: 3
       start_period: 5s
+    command: >
+      sh -c "python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py create_timelines &&
+             python manage.py runserver 0.0.0.0:8000"
   
   redis:
-    image: redis:alpine
+    image: redis:latest
     ports:
       - "6379:6379"
     volumes:
