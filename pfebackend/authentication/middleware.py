@@ -3,19 +3,10 @@ from django.contrib.auth.models import AnonymousUser
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, AuthenticationFailed
 from asgiref.sync import sync_to_async
-
-
-
-from channels.middleware import BaseMiddleware
-from django.contrib.auth.models import AnonymousUser
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework_simplejwt.exceptions import InvalidToken, AuthenticationFailed
-from asgiref.sync import sync_to_async
 from urllib.parse import parse_qs
 
 class JWTAuthMiddleware(BaseMiddleware):
     async def __call__(self, scope, receive, send):
-<<<<<<< HEAD
         # Initialize user as AnonymousUser by default
         scope["user"] = AnonymousUser()
         
@@ -52,19 +43,3 @@ class JWTAuthMiddleware(BaseMiddleware):
             return True
         except (InvalidToken, AuthenticationFailed):
             return False
-=======
-        query_string = scope.get("query_string", b"").decode("utf-8")
-        token = dict(x.split("=") for x in query_string.split("&")).get("token", "")
-
-        if token:
-            try:
-                jwt_auth = JWTAuthentication()
-                validated_token = jwt_auth.get_validated_token(token)
-                scope["user"] = await sync_to_async(jwt_auth.get_user)(validated_token)
-            except (InvalidToken, AuthenticationFailed):
-                scope["user"] = AnonymousUser()
-        else:
-            scope["user"] = AnonymousUser()
-
-        return await super().__call__(scope, receive, send)
->>>>>>> 31b87d668c17172675f33146da4a0c4846a12264
