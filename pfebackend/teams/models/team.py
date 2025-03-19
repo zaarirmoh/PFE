@@ -13,6 +13,7 @@ class Team(AuditableModel):
     - Only students can create teams
     - Team members must share the same academic year, program and have 'active' status
     - Team size is limited by the global TeamSettings configuration
+    - A student can only create one team per academic year and program
     """
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
@@ -76,7 +77,53 @@ class Team(AuditableModel):
             
         self.full_clean()
         super().save(*args, **kwargs)
+        
+    @classmethod
+    def student_has_team_for_year_program(cls, student_user, year, program):
+        """
+        Check if a student already owns a team for the given academic year and program.
+        
+        Args:
+            student_user: The User object representing a student
+            year: The academic year to check
+            program: The academic program to check
+            
+        Returns:
+            bool: True if the student already has a team for the year/program, False otherwise
+        """
+        from .team_membership import TeamMembership
+        
+        # Find teams where the user is an owner
+        owned_teams = cls.objects.filter(
+            teammembership__user=student_user,
+            teammembership__role=TeamMembership.ROLE_OWNER,
+            academic_year=year,
+            academic_program=program
+        )
+        
+        return owned_teams.exists()
     
+    @classmethod
+    def student_is_member_for_year_program(cls, student_user, year, program):
+        """
+        Check if a student is already a member of any team for the given academic year and program.
+        
+        Args:
+            student_user: The User object representing a student
+            year: The academic year to check
+            program: The academic program to check
+            
+        Returns:
+            bool: True if the student is already a member of a team for the year/program, False otherwise
+        """
+        # Find teams where the user is a member
+        member_teams = cls.objects.filter(
+            members=student_user,
+            academic_year=year,
+            academic_program=program
+        )
+        
+        return member_teams.exists()
     @classmethod
     def create_team(cls, owner, name, description=""):
         """
@@ -84,6 +131,7 @@ class Team(AuditableModel):
         - Validates that the owner is a student with active status
         - Sets the academic constraints from the owner's profile
         - Uses the global maximum_members setting
+        - Ensures the student hasn't already created a team for this year/program
         """
         from .team_membership import TeamMembership
         
@@ -97,6 +145,20 @@ class Team(AuditableModel):
         if student.academic_status != 'active':
             raise ValidationError("Only students with active status can create teams.")
         
+        # Check if student already owns a team for this year/program
+        if cls.student_has_team_for_year_program(owner, student.current_year, student.academic_program):
+            raise ValidationError(
+                f"You have already created a team for {student.current_year} year in the {student.academic_program} program. "
+                "A student can only create one team per academic year and program."
+            )
+            
+        # Check if the student is already a member of a team for their academic year/program
+        if cls.student_is_member_for_year_program(owner, student.current_year, student.academic_program):
+            raise ValidationError(
+                f"You are already a member of a team for academic year {student.current_year} in the {student.academic_program} program."
+            )
+
+
         # Create the team with academic constraints from the owner
         team = cls(
             name=name,

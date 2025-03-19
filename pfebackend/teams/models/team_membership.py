@@ -65,6 +65,22 @@ class TeamMembership(models.Model):
             raise ValidationError(
                 f"Only students in the {self.team.academic_program} program can join this team."
             )
+            
+        # Check if the user is already an owner of a team for this academic year and program
+        # This should only be checked when creating a new membership (not for the initial owner)
+        if not self.pk:  # Only for new memberships
+            owned_teams = Team.objects.filter(
+                teammembership__user=self.user,
+                teammembership__role=TeamMembership.ROLE_OWNER,
+                academic_year=self.team.academic_year,
+                academic_program=self.team.academic_program
+            )
+            
+            if owned_teams.exists():
+                raise ValidationError(
+                    f"You already own a team for academic year {self.team.academic_year} in the {self.team.academic_program} program "
+                    f"and cannot join another team in the same year and program."
+                )
     
     def save(self, *args, **kwargs):
         """Save after validation"""
