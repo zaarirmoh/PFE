@@ -103,6 +103,7 @@ class TeacherListView(BaseUserListView):
     ## Query Parameters
     - Teacher-specific filters:
         - `department` - Filter by academic department
+        - 'grade' - Filter by teacher grade (e.g., 'professeur', 'maitre_assistant_a')
     
     - Searching:
         - `search` - Search in first name, last name, email, and username
@@ -121,7 +122,7 @@ class TeacherListView(BaseUserListView):
     """
     filterset_class = TeacherFilter
     search_fields = ['first_name', 'last_name', 'email', 'username']
-    ordering_fields = ['last_name', 'first_name', 'email']
+    ordering_fields = ['last_name', 'first_name', 'email', 'teacher__grade']
     
     def get_queryset(self):
         """

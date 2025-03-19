@@ -49,7 +49,7 @@ class StudentFilter(filters.FilterSet):
 
 class TeacherFilter(filters.FilterSet):
     department = filters.CharFilter(field_name="teacher__department")
-    
+    grade = filters.CharFilter(field_name="teacher__grade")
     class Meta:
         model = User
-        fields = ['department']
+        fields = ['department', 'grade']

@@ -6,4 +6,5 @@ class TeacherSerializer(serializers.ModelSerializer):
         model = Teacher
         fields = (
             'department',
+            'grade',
         )
