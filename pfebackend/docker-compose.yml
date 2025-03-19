@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: zaarirmoh/pfe:test3
     ports:
       - "8000:8000"
     depends_on:
@@ -12,8 +10,6 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-    volumes:
-      - .:/app
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]
       interval: 30s
