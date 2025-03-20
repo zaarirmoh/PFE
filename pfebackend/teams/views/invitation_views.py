@@ -7,7 +7,7 @@ from rest_framework.generics import (
 )
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied, ValidationError
-
+from django.core.exceptions import ValidationError as DjangoValidationError
 from teams.models import Team, TeamInvitation, TeamMembership
 from teams.serializers import TeamInvitationSerializer, InvitationResponseSerializer
 from teams.permissions import IsTeamMember, IsInvitationRecipient, IsTeamOwnerOrInviter
@@ -45,6 +45,8 @@ class TeamInvitationCreateView(CreateAPIView):
             )
             serializer.instance = invitation
         except ValueError as e:
+            raise ValidationError(str(e))
+        except DjangoValidationError as e:
             raise ValidationError(str(e))
 
 

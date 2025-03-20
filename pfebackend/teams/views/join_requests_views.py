@@ -8,7 +8,7 @@ from rest_framework.generics import (
 )
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied, ValidationError
-
+from django.core.exceptions import ValidationError as DjangoValidationError
 from teams.models import Team, TeamJoinRequest, TeamMembership
 from teams.serializers import TeamJoinRequestSerializer, JoinRequestResponseSerializer
 from teams.permissions import (
@@ -45,6 +45,8 @@ class JoinRequestCreateView(CreateAPIView):
             )
             serializer.instance = join_request
         except ValueError as e:
+            raise ValidationError(str(e))
+        except DjangoValidationError as e:
             raise ValidationError(str(e))
 
 

@@ -3,6 +3,8 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
     ListCreateAPIView,
 )
+from django.core.exceptions import ValidationError as DjangoValidationError
+from rest_framework.exceptions import ValidationError
 from teams.models import Team
 from teams.serializers import TeamSerializer
 from teams.permissions import IsTeamMember, IsTeamOwner
@@ -27,7 +29,6 @@ class TeamListCreateView(ListCreateAPIView):
         - `description` - Filter by description (contains, case-insensitive)
         - `academic_year` - Filter by academic year
         - `academic_program` - Filter by academic program
-        - `is_verified` - Filter by verification status (true/false)
     
     - Date filters:
         - `created_after` - Teams created after specified date (YYYY-MM-DD)
@@ -36,6 +37,7 @@ class TeamListCreateView(ListCreateAPIView):
         - `updated_before` - Teams updated before specified date (YYYY-MM-DD)
     
     - Boolean filters:
+        - `is_verified` - Filter by verification status (true/false)
         - `is_member` - Teams where current user is a member (true/false)
         - `has_capacity` - Teams with capacity for more members (true/false)
         - `is_owner` - Teams where current user is the owner (true/false)
@@ -82,29 +84,33 @@ class TeamListCreateView(ListCreateAPIView):
     
     def perform_create(self, serializer):
         """Create a new team with the current user as owner"""
-        # Use TeamService to create the team
-        team = TeamService.create_team(
-            name=serializer.validated_data['name'],
-            description=serializer.validated_data.get('description', ''),
-            owner=self.request.user
-        )
+        try:
+                # Use TeamService to create the team
+            team = TeamService.create_team(
+                name=serializer.validated_data['name'],
+                description=serializer.validated_data.get('description', ''),
+                owner=self.request.user
+            )
+            
+            # Set serializer instance for proper response
+            serializer.instance = team
+            
+            # Send notification to owner using NotificationService
+            NotificationService.create_and_send(
+                recipient=self.request.user,
+                title="Team Created",
+                content=f"You created the team '{team.name}'",
+                notification_type='team_update',
+                related_object=team,
+                priority='low',
+                metadata={
+                    'team_id': team.id,
+                    'event_type': 'team_created'
+                }
+            )
+        except DjangoValidationError as e:
+            raise ValidationError(str(e))
         
-        # Set serializer instance for proper response
-        serializer.instance = team
-        
-        # Send notification to owner using NotificationService
-        NotificationService.create_and_send(
-            recipient=self.request.user,
-            title="Team Created",
-            content=f"You created the team '{team.name}'",
-            notification_type='team_update',
-            related_object=team,
-            priority='low',
-            metadata={
-                'team_id': team.id,
-                'event_type': 'team_created'
-            }
-        )
 
 
 class TeamDetailView(RetrieveUpdateDestroyAPIView):

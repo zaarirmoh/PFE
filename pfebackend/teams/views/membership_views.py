@@ -5,8 +5,8 @@ from rest_framework.generics import (
     CreateAPIView
 )
 from rest_framework.response import Response
-from rest_framework.exceptions import PermissionDenied
-
+from rest_framework.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import ValidationError as DjangoValidationError
 from teams.models import Team, TeamMembership
 from teams.serializers import TeamMembershipSerializer
 from teams.permissions import IsTeamMember, IsTeamOwner
@@ -82,6 +82,8 @@ class TeamMembershipCreateView(CreateAPIView):
             
         except Team.DoesNotExist:
             raise PermissionDenied("Team does not exist")
+        except DjangoValidationError as e:
+            raise ValidationError(str(e))
 
 
 class TeamMembershipDetailView(RetrieveUpdateDestroyAPIView):
