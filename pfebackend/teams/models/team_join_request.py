@@ -4,31 +4,24 @@ from django.core.exceptions import ValidationError
 from common.models import TimeStampedModel
 from users.models import Student
 from .team import Team
+from teams.mixins import TeamRequestStatusMixin
 
 
-class TeamJoinRequest(TimeStampedModel):
+class TeamJoinRequest(TeamRequestStatusMixin, TimeStampedModel):
     """
     Represents a request from a student to join a team.
     """
-    STATUS_PENDING = 'pending'
-    STATUS_ACCEPTED = 'accepted'
-    STATUS_DECLINED = 'declined'
-    STATUS_EXPIRED = 'expired'
-    
-    STATUS_CHOICES = (
-        (STATUS_PENDING, 'Pending'),
-        (STATUS_ACCEPTED, 'Accepted'),
-        (STATUS_DECLINED, 'Declined'),
-        (STATUS_EXPIRED, 'Expired'),
-    )
-    
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='join_requests')
     requester = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 
         related_name='sent_join_requests'
     )
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    status = models.CharField(
+        max_length=20,
+        choices=TeamRequestStatusMixin.STATUS_CHOICES, 
+        default=TeamRequestStatusMixin.STATUS_PENDING
+        )
     message = models.TextField(blank=True, help_text="Optional message from the requester")
     
     class Meta:

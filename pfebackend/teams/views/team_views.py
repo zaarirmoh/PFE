@@ -64,7 +64,7 @@ class TeamListCreateView(ListCreateAPIView):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = TeamFilter
     search_fields = ['name', 'description']
-    ordering_fields = ['name', 'created_at']
+    ordering_fields = ['name', 'created_at', 'updated_at', 'academic_year']
     ordering = ['name']
     
     def get_permissions(self):
@@ -95,19 +95,6 @@ class TeamListCreateView(ListCreateAPIView):
             # Set serializer instance for proper response
             serializer.instance = team
             
-            # Send notification to owner using NotificationService
-            NotificationService.create_and_send(
-                recipient=self.request.user,
-                title="Team Created",
-                content=f"You created the team '{team.name}'",
-                notification_type='team_update',
-                related_object=team,
-                priority='low',
-                metadata={
-                    'team_id': team.id,
-                    'event_type': 'team_created'
-                }
-            )
         except DjangoValidationError as e:
             raise ValidationError(str(e))
         
@@ -135,41 +122,13 @@ class TeamDetailView(RetrieveUpdateDestroyAPIView):
     def perform_update(self, serializer):
         """Update team and create notification if name changed"""
         team = self.get_object()
-        old_name = team.name
-        updated_team = serializer.save(updated_by=self.request.user)
-        
-        # Only send notification if the team name has changed
-        if old_name != updated_team.name:
-            NotificationService.create_and_send(
-                recipient=self.request.user,
-                title="Team Updated",
-                content=f"Team name changed from '{old_name}' to '{updated_team.name}'",
-                notification_type='team_update',
-                related_object=updated_team,
-                priority='medium',
-                metadata={
-                    'team_id': updated_team.id,
-                    'old_name': old_name,
-                    'new_name': updated_team.name,
-                    'event_type': 'team_renamed'
-                }
-            )
+        TeamService.update_team(
+            team=team,
+            user=self.request.user,
+            **serializer.validated_data
+        )
 
     def perform_destroy(self, instance):
         """Delete team and create notification"""
-        team_name = instance.name
-        team_id = instance.id
-        instance.delete()
-        
-        # Send notification about team deletion
-        NotificationService.create_and_send(
-            recipient=self.request.user,
-            title="Team Deleted",
-            content=f"Team '{team_name}' was deleted",
-            notification_type='team_update',
-            priority='medium',
-            metadata={
-                'team_name': team_name,
-                'event_type': 'team_deleted'
-            }
-        )
+        team = self.get_object()
+        TeamService.delete_team(team, request.user)

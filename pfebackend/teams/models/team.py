@@ -15,7 +15,7 @@ class Team(AuditableModel):
     - Team size is limited by the global TeamSettings configuration
     - A student can only create one team per academic year and program
     """
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     members = models.ManyToManyField(
         settings.AUTH_USER_MODEL, 
@@ -39,6 +39,10 @@ class Team(AuditableModel):
     maximum_members = models.PositiveSmallIntegerField(
         help_text="Maximum number of members allowed in this team"
     )
+    
+    class Meta:
+        # Add unique constraint for name (case-insensitive handled in validation)
+        unique_together = [('academic_year', 'academic_program', 'name')]
     
     def __str__(self):
         return self.name
