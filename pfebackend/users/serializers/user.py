@@ -10,7 +10,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
     
     class Meta(UserCreateSerializer.Meta):
         model = User
-        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'user_type', 'profile', 'password')
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'user_type', 'profile','profile_picture_url', 'password')
         
     def validate(self, attrs):
         profile_data = attrs.pop("profile", None)
@@ -43,7 +43,7 @@ class CustomUserSerializer(UserSerializer):
     
     class Meta(UserSerializer.Meta):
         model = User
-        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'user_type', 'profile')
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'user_type', 'profile','profile_picture_url')
         
     def get_profile(self, instance):
         # Get the profile instance
