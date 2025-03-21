@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'teams',
     'timeline',
     'common',
+    'django_seed'
 ]
 
 MIDDLEWARE = [
@@ -167,7 +168,7 @@ DJOSER = {
     'HIDE_USERS': True,
 }
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=600),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "AUTH_HEADER_TYPES": ("Bearer",),
     "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
