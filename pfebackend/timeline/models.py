@@ -161,7 +161,6 @@ class Timeline(models.Model):
     slug = models.CharField(
         max_length=20, 
         choices=TIMELINE_CHOICES, 
-        unique=True,
         help_text=_("Unique identifier for the timeline")
     )
     name = models.CharField(max_length=100, help_text=_("Display name of the timeline"))
@@ -197,6 +196,9 @@ class Timeline(models.Model):
         """Override save to validate data before saving."""
         self.clean()
         super().save(*args, **kwargs)
+    
+    class Meta:
+        unique_together = ('slug', 'academic_year', 'academic_program', 'specialty')
 
     def __str__(self):
         return f"{self.name} (Year: {self.academic_year}, Program: {self.academic_program}, Specialty: {self.specialty})"

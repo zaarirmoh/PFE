@@ -73,10 +73,9 @@ from datetime import timedelta
 from timeline.models import Timeline
 
 class Command(BaseCommand):
-    help = 'Creates the four default timelines if they do not exist'
+    help = 'Creates the default timelines for different academic years, programs, and specialties.'
 
     def handle(self, *args, **options):
-        # Default dates
         now = timezone.now()
         groups_start = now
         groups_end = now + timedelta(days=14)
@@ -84,18 +83,19 @@ class Command(BaseCommand):
         themes_end = themes_start + timedelta(days=14)
         work_start = themes_end
         work_end = work_start + timedelta(days=60)
-        soutenance_start = work_start
+        soutenance_start = work_end
         soutenance_end = soutenance_start + timedelta(days=14)
 
         # Define academic programs, years, and specialties
         academic_programs = {
             "preparatory": {
-                2: "2CPI"
+                1: ["1CPI"],  
+                2: ["2CPI"]
             },
             "superior": {
-                1: "1CS",
-                2: ["IASD", "SIW", "ISI", "3CS"],
-                3: ["IASD", "SIW", "ISI", "3CS"]
+                1: ["1CS"],
+                2: ["IASD", "SIW", "ISI"], 
+                3: ["IASD", "SIW", "ISI"]
             }
         }
 
@@ -110,11 +110,10 @@ class Command(BaseCommand):
         created_count = 0
         for program, years in academic_programs.items():
             for year, specialties in years.items():
-                if not isinstance(specialties, list):  # Convert single specialty to a list
-                    specialties = [specialties]
-
-                for specialty in specialties:
+                for specialty in specialties:  
                     for timeline_data in timeline_types:
+                        print(f"Trying to create timeline: {timeline_data['name']} (Year: {year}, Program: {program}, Specialty: {specialty})")
+
                         timeline, created = Timeline.objects.get_or_create(
                             slug=timeline_data["slug"],
                             academic_year=year,
@@ -127,6 +126,7 @@ class Command(BaseCommand):
                                 "end_date": groups_end
                             }
                         )
+
                         if created:
                             created_count += 1
                             self.stdout.write(self.style.SUCCESS(
