@@ -8,4 +8,4 @@ class TimelineSerializer(serializers.ModelSerializer):
     class Meta:
         model = Timeline
         fields = ['id', 'slug', 'name', 'description', 'start_date', 
-                 'end_date', 'is_active', 'status', 'is_current','academic_year','academic_program']
+                 'end_date', 'is_active', 'status', 'is_current','academic_year','academic_program','specialty']
