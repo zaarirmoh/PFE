@@ -8,16 +8,27 @@ User = get_user_model()
 
 class Command(BaseCommand):
     help = 'Generate random users for testing purposes'
+    
+    def add_arguments(self, parser):
+        parser.add_argument('--students', type=int, default=10, help='Number of students to create')
+        parser.add_argument('--teachers', type=int, default=10, help='Number of teachers to create')
+        parser.add_argument('--admins', type=int, default=3, help='Number of administrators to create')
+        parser.add_argument('--password', type=str, default='zaarirmoh', help='Password for all created users')
 
     def handle(self, *args, **kwargs):
         fake = Faker()
-        password = 'zaarirmoh'
+        
+        # Get command parameters
+        num_students = kwargs.get('students', 10)
+        num_teachers = kwargs.get('teachers', 10)
+        num_admins = kwargs.get('admins', 3)
+        password = kwargs.get('password', 'zaarirmoh')
         
         self.stdout.write('Creating random users...')
         
-        # Create 10 students
-        self.stdout.write('Creating students...')
-        for i in range(10):
+        # Create students
+        self.stdout.write(f'Creating {num_students} students...')
+        for i in range(num_students):
             # Create user
             first_name = fake.first_name()
             last_name = fake.last_name()
@@ -33,9 +44,15 @@ class Command(BaseCommand):
                 user_type='student'
             )
             
-            # Create student profile
+            # Create student profile with valid current_year based on academic_program
             academic_program = random.choice(['preparatory', 'superior'])
-            current_year = random.randint(1, 5)
+            
+            # Set current_year according to constraints
+            if academic_program == 'preparatory':
+                current_year = random.randint(1, 2)
+            else:  # superior
+                current_year = random.randint(1, 3)
+                
             Student.objects.create(
                 user=user,
                 matricule=f"STU{i+1:04d}",
@@ -43,12 +60,12 @@ class Command(BaseCommand):
                 academic_program=academic_program,
                 current_year=current_year,
                 speciality=fake.job() if academic_program == 'superior' else None,
-                academic_status=random.choice(['active'])
+                academic_status=random.choice(['active', 'on_leave', 'graduated'])
             )
         
-        # Create 10 teachers
-        self.stdout.write('Creating teachers...')
-        for i in range(10):
+        # Create teachers
+        self.stdout.write(f'Creating {num_teachers} teachers...')
+        for i in range(num_teachers):
             # Create user
             first_name = fake.first_name()
             last_name = fake.last_name()
@@ -77,9 +94,9 @@ class Command(BaseCommand):
                 ])
             )
         
-        # Create 3 administrators
-        self.stdout.write('Creating administrators...')
-        for i in range(3):
+        # Create administrators
+        self.stdout.write(f'Creating {num_admins} administrators...')
+        for i in range(num_admins):
             # Create user
             first_name = fake.first_name()
             last_name = fake.last_name()
@@ -108,6 +125,6 @@ class Command(BaseCommand):
             )
         
         self.stdout.write(self.style.SUCCESS('Successfully created random users:'))
-        self.stdout.write(f'- 10 students (password: {password})')
-        self.stdout.write(f'- 10 teachers (password: {password})')
-        self.stdout.write(f'- 3 administrators (password: {password})')
+        self.stdout.write(f'- {num_students} students (password: {password})')
+        self.stdout.write(f'- {num_teachers} teachers (password: {password})')
+        self.stdout.write(f'- {num_admins} administrators (password: {password})')

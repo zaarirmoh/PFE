@@ -7,15 +7,19 @@ class StudentProfileInline(UnfoldAdmin.StackedInline):
     can_delete = False
     verbose_name = "Student Profile"
     verbose_name_plural = "Student Profile"
+    tab = True
 
 class TeacherProfileInline(UnfoldAdmin.StackedInline):
     model = Teacher
     can_delete = False
     verbose_name = "Teacher Profile"
     verbose_name_plural = "Teacher Profile"
+    tab = True
+
 
 class AdministratorProfileInline(UnfoldAdmin.StackedInline):
     model = Administrator
     can_delete = False
     verbose_name = "Administrator Profile"
     verbose_name_plural = "Administrator Profile"
+    tab = True

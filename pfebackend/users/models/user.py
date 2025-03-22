@@ -48,9 +48,11 @@ class User(AbstractBaseUser):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES)
-    profile_picture_url = models.URLField(max_length=500, null=True, blank=True,
-                                          default="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png",
-                                            help_text="URL of the user's profile picture")
+    profile_picture_url = models.URLField(
+        max_length=500, null=True, blank=True,
+        default="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png",
+        help_text="URL of the user's profile picture"
+    )
     is_active = models.BooleanField(default = True)
     is_staff = models.BooleanField(default = False)
     is_superuser = models.BooleanField(default = False)

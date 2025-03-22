@@ -24,10 +24,18 @@ class Timeline(models.Model):
         (SOUTENANCE, _('Soutenance')),
     ]
     
+    # Academic program choices
+    PREPARATORY = 'preparatory'
+    SUPERIOR = 'superior'
+    
+    ACADEMIC_PROGRAM_CHOICES = [
+        (PREPARATORY, _('Preparatory')),
+        (SUPERIOR, _('Superior')),
+    ]
+    
     # Fields
     slug = models.CharField(
-        max_length=20, 
-        choices=TIMELINE_CHOICES, 
+        max_length=50, 
         unique=True,
         help_text=_("Unique identifier for the timeline")
     )
@@ -52,23 +60,47 @@ class Timeline(models.Model):
         default=True,
         help_text=_("Whether this timeline is currently enabled")
     )
+    timeline_type = models.CharField(
+        max_length=20,
+        choices=TIMELINE_CHOICES,
+        help_text=_("Type of timeline")
+    )
+    academic_program = models.CharField(
+        max_length=20,
+        choices=ACADEMIC_PROGRAM_CHOICES,
+        help_text=_("Academic program this timeline applies to")
+    )
+    academic_year = models.PositiveSmallIntegerField(
+        help_text=_("Academic year this timeline applies to (1, 2, or 3)")
+    )
     
     class Meta:
-        ordering = ['start_date', 'slug']
+        ordering = ['academic_program', 'academic_year', 'start_date', 'timeline_type']
         verbose_name = _("Timeline")
         verbose_name_plural = _("Timelines")
+        unique_together = [['timeline_type', 'academic_program', 'academic_year']]
     
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.get_academic_program_display()} Year {self.academic_year})"
     
     def clean(self):
         """Validate the model data."""
         # Ensure end_date is after start_date if provided
         if self.end_date and self.start_date and self.end_date <= self.start_date:
             raise ValidationError(_("End date must be after start date"))
+        
+        # Validate academic_year based on academic_program
+        if self.academic_program == self.PREPARATORY and self.academic_year not in [1, 2]:
+            raise ValidationError(_("For preparatory program, academic year must be 1 or 2"))
+        elif self.academic_program == self.SUPERIOR and self.academic_year not in [1, 2, 3]:
+            raise ValidationError(_("For superior program, academic year must be 1, 2, or 3"))
     
     def save(self, *args, **kwargs):
         """Override save to ensure validation is run."""
+        # Generate slug if not provided
+        if not self.slug:
+            self.slug = f"{self.timeline_type}-{self.academic_program}-{self.academic_year}"
+        
         self.clean()
         super().save(*args, **kwargs)
         
@@ -116,3 +148,28 @@ class Timeline(models.Model):
             return 'expired'
         else:
             return 'active'
+            
+    @classmethod
+    def get_current_timeline(cls, timeline_type, academic_program, academic_year):
+        """
+        Get the current timeline for the given type, program and year.
+        
+        Args:
+            timeline_type (str): The type of timeline (groups, themes, etc.)
+            academic_program (str): The academic program (preparatory, superior)
+            academic_year (int): The academic year (1, 2, or 3)
+            
+        Returns:
+            Timeline or None: The current timeline or None if no active timeline exists
+        """
+        try:
+            return cls.objects.get(
+                timeline_type=timeline_type,
+                academic_program=academic_program,
+                academic_year=academic_year,
+                is_active=True,
+                start_date__lte=timezone.now(),
+                end_date__gte=timezone.now()
+            )
+        except (cls.DoesNotExist, cls.MultipleObjectsReturned):
+            return None

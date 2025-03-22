@@ -39,21 +39,21 @@ class CustomUserAdmin(BaseUserAdmin, ModelAdmin):
             'Personal info',
             {
                 'fields': ('first_name', 'last_name'),
-                'classes': ('collapse',)
+                'classes': ['callapse'],
             }
         ),
         (
             'User Type',
             {
                 'fields': ('user_type',),
-                'classes': ('collapse',)
+                'classes': ['callapse'],
             }
         ),
         (
             'Permissions',
             {
                 'fields': ('is_active', 'is_staff', 'is_superuser'),
-                'classes': ('collapse',),  # Changed from 'callapse' to 'tab'
+                'classes': ['callapse'],  # Changed from 'callapse' to 'tab'
                 'description': 'Manage user permissions and access levels'
             }
         ),

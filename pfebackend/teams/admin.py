@@ -10,6 +10,7 @@ class TeamMembershipInline(TabularInline):
     extra = 0  # No extra empty forms
     readonly_fields = ('user', 'team', 'role', 'joined_at')
     can_delete = False
+    tab = True
     
     def has_add_permission(self, request, obj=None):
         """Prevent adding team members via admin"""
@@ -49,16 +50,16 @@ class TeamAdmin(ModelAdmin):
     inlines = [TeamMembershipInline]
     
     fieldsets = (
-        (None, {
+        ('Team info', {
             'fields': ('name', 'description')
+        }),
+        ('Academic info', {
+            'fields': ('academic_program', 'academic_year', 'maximum_members'),
+            'classes': ('collapse',)
         }),
         ('Verification Status', {
             'fields': ('is_verified',),
             'description': 'Administrators can verify teams to indicate official recognition.'
-        }),
-        ('Academic Constraints', {
-            'fields': ('academic_year', 'academic_program', 'maximum_members'),
-            'classes': ('collapse',)
         }),
         ('Audit Information', {
             'fields': ('created_at', 'created_by'),
