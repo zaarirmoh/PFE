@@ -31,31 +31,30 @@ class AutoTeamAssignmentService:
                 logger.warning(f"Timeline '{timeline_slug}' has not ended yet.")
                 return {"error": "Timeline has not ended yet"}
             
-            if timeline.slug != Timeline.GROUPS:
-                logger.warning(f"Auto team assignment is not supported for timeline '{timeline_slug}'")
-                return {"error": "Auto team assignment is not supported for this timeline"}
+            if not timeline.timeline_type == Timeline.GROUPS:
+                logger.warning(f"Auto team assignment is only supported for groups timeline, got '{timeline.timeline_type}'")
+                return {"error": "Auto team assignment is only supported for groups timeline"}
                 
-            logger.info(f"Starting auto team assignment for timeline '{timeline_slug}'")
+            logger.info(f"Starting auto team assignment for groups timeline '{timeline_slug}'")
             
-            # Get all active academic years and programs combinations from existing teams
-            team_academic_configs = Team.objects.values('academic_year', 'academic_program').distinct()
+            # Process this specific timeline's year and program
+            year = timeline.academic_year
+            program = timeline.academic_program
             
             stats = {
                 "timeline": timeline_slug,
-                "assignments_by_program": {},
+                "timeline_type": timeline.timeline_type,
+                "academic_year": year,
+                "academic_program": program,
                 "total_assigned": 0,
                 "total_unassigned": 0,
             }
             
-            # Process each academic year and program combination
-            for config in team_academic_configs:
-                year = config['academic_year']
-                program = config['academic_program']
-                
-                result = cls._assign_students_for_year_program(year, program)
-                stats["assignments_by_program"][f"{year}_{program}"] = result
-                stats["total_assigned"] += result["assigned_count"]
-                stats["total_unassigned"] += result["unassigned_count"]
+            # Only process the specific year and program from the timeline
+            result = cls._assign_students_for_year_program(year, program)
+            stats.update(result)
+            stats["total_assigned"] = result["assigned_count"]
+            stats["total_unassigned"] = result["unassigned_count"]
                 
             logger.info(f"Auto team assignment completed: {stats['total_assigned']} students assigned")
             return stats

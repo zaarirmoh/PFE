@@ -184,37 +184,27 @@ UNFOLD = {
                 {
                     "title": _("1CP timelines"),
                     # "icon": "sports_motorsports",
-                    "link": lambda request: f"{
-                        reverse_lazy('admin:timelines_timeline_changelist')
-                        }?academic_program__exact=preparatory&academic_year=1",
+                    "link": lambda request: f"{reverse_lazy('admin:timelines_timeline_changelist')}?academic_program__exact=preparatory&academic_year=1",
                 },
                 {
                     "title": _("2CP timelines"),
                     # "icon": "sports_motorsports",
-                    "link": lambda request: f"{
-                        reverse_lazy('admin:timelines_timeline_changelist')
-                        }?academic_program__exact=preparatory&academic_year=2",
+                    "link": lambda request: f"{reverse_lazy('admin:timelines_timeline_changelist')}?academic_program__exact=preparatory&academic_year=2",
                 },
                 {
                     "title": _("1CS timelines"),
                     # "icon": "sports_motorsports",
-                    "link": lambda request: f"{
-                        reverse_lazy('admin:timelines_timeline_changelist')
-                        }?academic_program__exact=superior&academic_year=1",
+                    "link": lambda request: f"{reverse_lazy('admin:timelines_timeline_changelist')}?academic_program__exact=superior&academic_year=1",
                 },
                 {
                     "title": _("2CS timelines"),
                     # "icon": "sports_motorsports",
-                    "link": lambda request: f"{
-                        reverse_lazy('admin:timelines_timeline_changelist')
-                        }?academic_program__exact=superior&academic_year=2",
+                    "link": lambda request: f"{reverse_lazy('admin:timelines_timeline_changelist')}?academic_program__exact=superior&academic_year=2",
                 },
                 {
                     "title": _("3CS timelines"),
                     # "icon": "sports_motorsports",
-                    "link": lambda request: f"{
-                        reverse_lazy('admin:timelines_timeline_changelist')
-                        }?academic_program__exact=superior&academic_year=3",
+                    "link": lambda request: f"{reverse_lazy('admin:timelines_timeline_changelist')}?academic_program__exact=superior&academic_year=3",
                 },
             ],
         },
