@@ -1,6 +1,9 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import Group
 from unfold.admin import ModelAdmin
+import unfold.admin
+from unfold.decorators import action
 from django.contrib import messages
 from django.db import transaction
 from django.shortcuts import redirect
@@ -10,10 +13,11 @@ from .admin_inlines import (
     TeacherProfileInline,
     AdministratorProfileInline
 )
-from users.models import User
+from users.models import User, Student
 from users.serializers.base import BaseProfileSerializer
-
-# admin.site.unregister(User)
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
+from .admin_filters import *
 
 # Dictionary mapping user types to their corresponding inline classes
 USER_TYPE_INLINES = {
@@ -28,7 +32,7 @@ class CustomUserAdmin(BaseUserAdmin, ModelAdmin):
     
     list_display = ('email', 'username', 'user_type', 'is_active', 'is_staff', 'is_superuser')
     exclude = ('password',)
-    list_filter = ('user_type', 'is_active', 'is_staff', 'is_superuser')
+    list_filter = ('user_type', AcademicProgramYearFilter)
     
     # Set filter_horizontal to an empty tuple since we don't have groups or user_permissions
     filter_horizontal = ()
@@ -114,6 +118,14 @@ class CustomUserAdmin(BaseUserAdmin, ModelAdmin):
         """Handle changing a user's type by creating the new profile if needed."""
         # Create new profile for the user's new type
         self._create_profile(user)
+        
+    @action(description=_("action"), icon="hub")
+    def changelist_action1(self, request):
+        messages.success(
+            request, _("Changelist action has been successfully executed.")
+        )
+        return redirect(reverse_lazy("admin:users_user_changelist"))
     
 # Register your models here.
 admin.site.register(User, CustomUserAdmin)
+admin.site.unregister(Group)

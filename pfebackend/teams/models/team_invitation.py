@@ -30,7 +30,14 @@ class TeamInvitation(TeamRequestStatusMixin, TimeStampedModel):
     message = models.TextField(blank=True, help_text="Optional message from the inviter")
     
     class Meta:
-        unique_together = ('team', 'invitee', 'status')
+        # unique_together = ('team', 'invitee', 'status')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['team', 'invitee'],
+                condition=models.Q(status__in=['PENDING', 'ACCEPTED']),  # Only enforce uniqueness for active requests
+                name='unique_active_invitation'
+            )
+        ]
         
     def __str__(self):
         return f"{self.inviter.username} invited {self.invitee.username} to {self.team.name}"

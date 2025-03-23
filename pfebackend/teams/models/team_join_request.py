@@ -25,7 +25,14 @@ class TeamJoinRequest(TeamRequestStatusMixin, TimeStampedModel):
     message = models.TextField(blank=True, help_text="Optional message from the requester")
     
     class Meta:
-        unique_together = ('team', 'requester', 'status')
+        # unique_together = ('team', 'requester', 'status')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['team', 'requester'],
+                condition=models.Q(status__in=['PENDING', 'ACCEPTED']),  # Only enforce uniqueness for active requests
+                name='unique_active_join_request'
+            )
+        ]
 
         
     def __str__(self):

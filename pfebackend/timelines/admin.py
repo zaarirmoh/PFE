@@ -78,7 +78,7 @@ class TimelineAdmin(ModelAdmin):
             kwargs['disabled'] = True  # Disable the choice field
         return super().formfield_for_choice_field(db_field, request, **kwargs)
     
-    @action(description=_("Initialize nodes"), icon="hub")
+    @action(description=_("action"), icon="hub")
     def changelist_action1(self, request):
         messages.success(
             request, _("Changelist action has been successfully executed.")

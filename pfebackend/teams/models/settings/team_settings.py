@@ -2,66 +2,91 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.cache import cache
 from common.models import AuditableModel
+from users.models import Student
 
 class TeamSettings(AuditableModel):
     """
-    Global settings for team configurations that can be modified by administrators.
-    Uses a singleton pattern to ensure only one settings object exists.
+    Settings for team configurations based on academic program and year combinations.
+    These settings can be modified by administrators for each program-year pair.
     """
     DEFAULT_MAX_MEMBERS = 6
     MAX_ABSOLUTE_LIMIT = 20  # Absolute maximum that can't be exceeded
     
+    academic_year = models.PositiveSmallIntegerField(
+        help_text="Academic year these settings apply to"
+    )
+    academic_program = models.CharField(
+        max_length=20, 
+        choices=Student.ACADEMIC_PROGRAM_CHOICES,
+        help_text="Academic program these settings apply to"
+    )
+    
     maximum_members = models.PositiveSmallIntegerField(
         default=DEFAULT_MAX_MEMBERS,
         validators=[
-            MinValueValidator(2, message="Teams must allow at least 2 members"),
+            MinValueValidator(1, message="Teams must allow at least 1 members"),
             MaxValueValidator(MAX_ABSOLUTE_LIMIT, message=f"Teams cannot exceed {MAX_ABSOLUTE_LIMIT} members")
         ],
         help_text="Maximum number of students allowed in a single team"
     )
-    
-    allow_cross_program_teams = models.BooleanField(
-        default=False,
-        help_text="If enabled, students from different programs can join the same team"
-    )
-    
-    allow_cross_year_teams = models.BooleanField(
-        default=False,
-        help_text="If enabled, students from different academic years can join the same team"
-    )
-    
     class Meta:
+        unique_together = [('academic_year', 'academic_program')]
         verbose_name = "Team Settings"
         verbose_name_plural = "Team Settings"
+        
+    def __str__(self):
+        return f"{self.academic_program} - Year {self.academic_year} Settings"
     
     def save(self, *args, **kwargs):
         """
-        Ensure only one instance exists and invalidate cache after saving
+        Override save method to clear cache
         """
-        self.pk = 1
         super().save(*args, **kwargs)
-        # Clear cache to force refresh
-        cache.delete('team_settings')
+        # Clear cache for this specific program-year combination
+        cache_key = self._get_cache_key(self.academic_program, self.academic_year)
+        cache.delete(cache_key)
     
     def delete(self, *args, **kwargs):
         """Prevent deletion of the settings object"""
         pass
     
+    @staticmethod
+    def _get_cache_key(program, year):
+        """Generate a cache key for a specific program-year combination"""
+        return f'team_settings_{program}_{year}'
+    
     @classmethod
-    def get_settings(cls):
+    def get_settings(cls, program, year):
         """
-        Get the current settings, using cached version if available.
-        If no settings object exists, create one with defaults.
+        Get the settings for a specific academic program and year.
+        If no settings exist, create default settings for this program-year.
+        
+        Args:
+            program: The academic program code
+            year: The academic year number
+            
+        Returns:
+            TeamSettings: The settings object for the given program-year
         """
+        cache_key = cls._get_cache_key(program, year)
+        
         # Try to get from cache first
-        settings = cache.get('team_settings')
+        settings = cache.get(cache_key)
         if settings is None:
             try:
-                settings = cls.objects.get(pk=1)
+                settings = cls.objects.get(academic_program=program, academic_year=year)
             except cls.DoesNotExist:
-                settings = cls.objects.create(pk=1)
+                # Create new settings with defaults
+                settings = cls(
+                    academic_program=program,
+                    academic_year=year,
+                    maximum_members=cls.DEFAULT_MAX_MEMBERS,
+                )
+                settings.save()
+            
             # Cache for 1 hour
-            cache.set('team_settings', settings, 3600)
+            cache.set(cache_key, settings, 3600)
+        
         return settings
     
     @classmethod

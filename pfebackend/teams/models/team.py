@@ -62,14 +62,25 @@ class Team(AuditableModel):
         """Check if the team has capacity for more members"""
         return self.current_member_count < self.maximum_members
     
+    @property
+    def program_year_settings(self):
+        """Get the program-year settings for this team"""
+        return TeamSettings.get_settings(
+            program=self.academic_program,
+            year=self.academic_year
+        )
+    
     def clean(self):
         """Validate the model before saving"""
         super().clean()
         
         # Ensure maximum_members doesn't exceed global limit
-        global_max = TeamSettings.get_maximum_members()
-        if self.maximum_members > global_max:
-            self.maximum_members = global_max
+        program_year_max = TeamSettings.get_maximum_members(
+            program=self.academic_program,
+            year=self.academic_year
+        )
+        if self.maximum_members > program_year_max:
+            self.maximum_members = program_year_max
     
     def save(self, *args, **kwargs):
         """
@@ -77,7 +88,10 @@ class Team(AuditableModel):
         If maximum_members is not set, use the global default.
         """
         if not self.maximum_members:
-            self.maximum_members = TeamSettings.get_maximum_members()
+            self.maximum_members = TeamSettings.get_maximum_members(
+                program=self.academic_program,
+                year=self.academic_year
+            )
             
         self.full_clean()
         super().save(*args, **kwargs)
@@ -161,6 +175,11 @@ class Team(AuditableModel):
             raise ValidationError(
                 f"You are already a member of a team for academic year {student.current_year} in the {student.academic_program} program."
             )
+            
+        max_members = TeamSettings.get_maximum_members(
+            program=student.academic_program,
+            year=student.current_year
+        )
 
 
         # Create the team with academic constraints from the owner
@@ -169,7 +188,7 @@ class Team(AuditableModel):
             description=description,
             academic_year=student.current_year,
             academic_program=student.academic_program,
-            maximum_members=TeamSettings.get_maximum_members(),
+            maximum_members=max_members,
             created_by=owner,
             updated_by=owner
         )

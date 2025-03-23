@@ -162,25 +162,16 @@ UNFOLD = {
     #         },
     #     ],
     # },
-    # "TABS": [
-    #     {
-    #         "models": [
-    #             "app_label.model_name_in_lowercase",
-    #         ],
-    #         "items": [
-    #             {
-    #                 "title": _("Your custom title"),
-    #                 "link": reverse_lazy("admin:app_label_model_name_changelist"),
-    #                 "permission": "sample_app.permission_callback",
-    #             },
-    #         ],
-    #     },
-    # ],
     "TABS": [
         {
             "page": "timelines",
             "models": ["timelines.timeline"],
             "items": [
+                {
+                    "title": _("All timelines"),
+                    # "icon": "sports_motorsports",
+                    "link": lambda request: f"{reverse_lazy('admin:timelines_timeline_changelist')}",
+                },
                 {
                     "title": _("1CP timelines"),
                     # "icon": "sports_motorsports",
@@ -205,6 +196,27 @@ UNFOLD = {
                     "title": _("3CS timelines"),
                     # "icon": "sports_motorsports",
                     "link": lambda request: f"{reverse_lazy('admin:timelines_timeline_changelist')}?academic_program__exact=superior&academic_year=3",
+                },
+            ],
+        },
+        {
+            "page": "users",
+            "models": ["users.user"],
+            "items": [
+                {
+                    "title": _("Administrators"),
+                    # "icon": "sports_motorsports",
+                    "link": lambda request: f"{reverse_lazy('admin:users_user_changelist')}?user_type__exact=administrator",
+                },
+                {
+                    "title": _("Teachers"),
+                    # "icon": "sports_motorsports",
+                    "link": lambda request: f"{reverse_lazy('admin:users_user_changelist')}?user_type__exact=teacher",
+                },
+                {
+                    "title": _("Students"),
+                    # "icon": "sports_motorsports",
+                    "link": lambda request: f"{reverse_lazy('admin:users_user_changelist')}?user_type__exact=student",
                 },
             ],
         },

@@ -94,7 +94,10 @@ class TeamSettingsAdmin(ModelAdmin):
     """
     Admin for global team settings
     """
-    list_display = ('maximum_members', 'allow_cross_program_teams', 'allow_cross_year_teams')
+    list_display = ('academic_program', 'academic_year', 'maximum_members')
+    list_filter = ('academic_program', 'academic_year')
+    search_fields = ('academic_program', 'academic_year')
+    ordering = ('academic_program', 'academic_year')
     exclude = ('created_by', 'updated_by')
     
     def has_add_permission(self, request):
