@@ -61,7 +61,7 @@ INSTALLED_APPS = [
     'notifications',
     'projects',
     'teams',
-    'timeline',
+    'timelines',
     'common',
     'django_seed'
 ]

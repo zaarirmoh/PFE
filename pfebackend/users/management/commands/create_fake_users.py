@@ -60,7 +60,7 @@ class Command(BaseCommand):
                 academic_program=academic_program,
                 current_year=current_year,
                 speciality=fake.job() if academic_program == 'superior' else None,
-                academic_status=random.choice(['active', 'on_leave', 'graduated'])
+                academic_status='active'
             )
         
         # Create teachers

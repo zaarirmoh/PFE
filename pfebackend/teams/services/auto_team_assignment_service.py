@@ -4,7 +4,7 @@ import random
 import logging
 from users.models import Student
 from teams.models import Team, TeamMembership
-from timeline.models import Timeline
+from timelines.models import Timeline
 
 logger = logging.getLogger(__name__)
 
