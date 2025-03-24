@@ -45,13 +45,13 @@ class TeamSerializer(serializers.ModelSerializer):
         """Check if the team has capacity for more members"""
         return obj.has_capacity
         
-    def validate_name(self, value):
-        """Ensure team name is unique (case-insensitive)"""
-        # When updating, exclude current instance
-        queryset = Team.objects.filter(name__iexact=value)
-        if self.instance:
-            queryset = queryset.exclude(pk=self.instance.pk)
+    # def validate_name(self, value):
+    #     """Ensure team name is unique (case-insensitive)"""
+    #     # When updating, exclude current instance
+    #     queryset = Team.objects.filter(name__iexact=value)
+    #     if self.instance:
+    #         queryset = queryset.exclude(pk=self.instance.pk)
             
-        if queryset.exists():
-            raise serializers.ValidationError("A team with this name already exists.")
+    #     # if queryset.exists():
+    #     #     raise serializers.ValidationError("A team with this name already exists.")
         return value

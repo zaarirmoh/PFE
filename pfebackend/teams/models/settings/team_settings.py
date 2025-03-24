@@ -90,6 +90,7 @@ class TeamSettings(AuditableModel):
         return settings
     
     @classmethod
-    def get_maximum_members(cls):
+    def get_maximum_members(cls, program , year):
         """Helper method to quickly get the maximum_members setting"""
-        return cls.get_settings().maximum_members
+        settings = cls.get_settings(program, year)
+        return settings.maximum_members

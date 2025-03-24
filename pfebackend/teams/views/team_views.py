@@ -96,7 +96,7 @@ class TeamListCreateView(ListCreateAPIView):
             serializer.instance = team
             
         except DjangoValidationError as e:
-            raise ValidationError(str(e))
+            raise ValidationError({'detail': e.message})
         
 
 

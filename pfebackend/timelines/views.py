@@ -8,38 +8,11 @@ from rest_framework.decorators import api_view, permission_classes
 from users.permissions import IsStudent
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
 from timelines.models import Timeline
 from timelines.serializers import TimelineSerializer
 from timelines.filters import TimelineFilter
 
 class TimelineListView(ListAPIView):
-    """
-    Retrieve a list of timelines with enhanced filtering options.
-
-    Filters:
-    - Basic fields:
-      - `name` (str) → Filter by name (contains match)
-      - `slug` (str) → Filter by slug (exact match)
-      - `description` (str) → Filter by description content
-      - `academic_year` (int) → Filter by academic year
-      - `academic_program` (str) → Filter by program (e.g., "preparatory", "superior")
-      - `timeline_type` (str) → Filter by type (e.g., "groups", "themes")
-      
-    - Date range filters:
-      - `start_date_after` (datetime) → Filter by start date after this time
-      - `start_date_before` (datetime) → Filter by start date before this time
-      - `end_date_after` (datetime) → Filter by end date after this time
-      - `end_date_before` (datetime) → Filter by end date before this time
-      
-    - Status filters:
-      - `is_active` (bool) → Filter by active flag
-      - `is_current` (bool) → Filter currently active timelines by date range
-      - `status` (str) → Filter by computed status ("active", "expired", "upcoming", "inactive")
-      
-    - Student matching:
-      - `match_student` (bool) → Filter to match authenticated student's profile
-    """
     queryset = Timeline.objects.all()
     serializer_class = TimelineSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -47,7 +20,6 @@ class TimelineListView(ListAPIView):
     search_fields = ["name", "description", "slug"]
     ordering_fields = ["start_date", "end_date", "academic_year", "academic_program"]
     ordering = ["academic_program", "academic_year", "start_date"]
-
     @swagger_auto_schema(
         manual_parameters=[
             openapi.Parameter('name', openapi.IN_QUERY, description="Filter by name (contains)", type=openapi.TYPE_STRING),
@@ -68,7 +40,35 @@ class TimelineListView(ListAPIView):
         responses={200: TimelineSerializer(many=True)}
     )
     def get(self, request, *args, **kwargs):
-        """Retrieve timelines with optional filtering."""
+        """
+        Retrieve a list of timelines with enhanced filtering options.
+        
+        ## Endpoints
+        GET /api/timelines/ - List teams with filtering options
+        
+        ## Query Parameters
+        - Basic fields:
+            - `name` (str) → Filter by name (contains match)
+            - `slug` (str) → Filter by slug (exact match)
+            - `description` (str) → Filter by description content
+            - `academic_year` (int) → Filter by academic year
+            - `academic_program` (str) → Filter by program (e.g., "preparatory", "superior")
+            - `timeline_type` (str) → Filter by type (e.g., "groups", "themes")
+        
+        - Date range filters:
+            - `start_date_after` (datetime) → Filter by start date after this time
+            - `start_date_before` (datetime) → Filter by start date before this time
+            - `end_date_after` (datetime) → Filter by end date after this time
+            - `end_date_before` (datetime) → Filter by end date before this time
+        
+        - Status filters:
+            - `is_active` (bool) → Filter by active flag
+            - `is_current` (bool) → Filter currently active timelines by date range
+            - `status` (str) → Filter by computed status ("active", "expired", "upcoming", "inactive")
+        
+        - Student matching:
+            - `match_student` (bool) → Filter to match authenticated student's profile
+        """
         return super().get(request, *args, **kwargs)
     
 class MyTimelinesView(ListAPIView):
@@ -94,4 +94,3 @@ class MyTimelinesView(ListAPIView):
             academic_year=student.current_year,
             is_active=True
         )
-    
