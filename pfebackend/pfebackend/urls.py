@@ -45,8 +45,6 @@ urlpatterns = [
     path('api/', include('users.urls')),
     path('api/', include('timelines.urls')),
 
-    re_path(r'^api/auth/', include('djoser.urls')),
-    re_path(r'^api/auth/', include('djoser.urls.jwt')),
 ]
 
 from django.conf import settings

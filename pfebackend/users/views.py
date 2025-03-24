@@ -1,10 +1,16 @@
-from rest_framework import generics, filters
+from rest_framework import generics, filters, status
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth import get_user_model
 from users.serializers.user import CustomUserSerializer
 from common.pagination import StaticPagination
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
 from .filters import StudentFilter, TeacherFilter
+from documents.models import DocumentType
+from documents.serializers import DocumentSerializer
 
 User = get_user_model()
 
@@ -132,3 +138,50 @@ class TeacherListView(BaseUserListView):
         the related teacher profile in the same query.
         """
         return User.objects.filter(user_type='teacher').select_related('teacher')
+    
+class ProfilePictureUpdateView(generics.CreateAPIView):
+    """
+    API endpoint to update a user's profile picture.
+
+    ## Endpoint
+    POST /api/users/profile-picture/
+
+    ## Request
+    - Requires authentication
+    - Supports multipart/form-data file upload
+    - File field should be named 'file'
+
+    ## Responses
+    - 201 Created: Profile picture successfully uploaded
+    - 400 Bad Request: Invalid input
+    """
+    parser_classes = [MultiPartParser, FormParser]
+    serializer_class = DocumentSerializer
+
+    def create(self, request, *args, **kwargs):
+        # Check if file is present in the request
+        if 'file' not in request.FILES:
+            return Response(
+                {"error": "No profile picture file provided"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Prepare data for serializer
+        data = {
+            'document_type': DocumentType.PROFILE_PICTURE,
+            'title': f"Profile Picture for {request.user.username}",
+            'file': request.FILES['file']
+        }
+        
+        # Use serializer for validation and creation
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        
+        # Save the document and set the creator
+        document = serializer.save(created_by=request.user)
+        
+        # Update user's profile picture URL if needed
+        request.user.profile_picture_url = document.file.url
+        request.user.save()
+        
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

@@ -1,7 +1,5 @@
 from rest_framework import serializers
 from teams.models import Team
-
-
 from rest_framework import serializers
 from teams.models import Team
 
@@ -54,4 +52,4 @@ class TeamSerializer(serializers.ModelSerializer):
             
     #     # if queryset.exists():
     #     #     raise serializers.ValidationError("A team with this name already exists.")
-        return value
+        # return value
