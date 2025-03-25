@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'teams',
     'timelines',
     'common',
+    'themes',
     'django_seed'
 ]
 

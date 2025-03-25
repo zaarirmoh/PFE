@@ -44,6 +44,7 @@ urlpatterns = [
     path('api/', include('teams.urls')),
     path('api/', include('users.urls')),
     path('api/', include('timelines.urls')),
+    path('api/', include('themes.urls')),
 
 ]
 
