@@ -1,5 +1,5 @@
 from django_filters import rest_framework as filters
-from django.db.models import Q
+from django.db.models import Q, F
 from users.models import User
 
 class StudentFilter(filters.FilterSet):
@@ -18,9 +18,15 @@ class StudentFilter(filters.FilterSet):
     
     def filter_has_team(self, queryset, name, value):
         if value:
-            return queryset.filter(teams__isnull=False)
+            return queryset.filter(
+                teams__academic_year=F('student__current_year'),
+                teams__academic_program=F('student__academic_program')
+            ).distinct()
         else:
-            return queryset.filter(teams__isnull=True)
+            return queryset.exclude(
+                teams__academic_year=F('student__current_year'),
+                teams__academic_program=F('student__academic_program')
+            ).distinct()
         
     def filter_peers_only(self, queryset, name, value):
         # Only apply peer filtering if value is True
