@@ -4,5 +4,5 @@ db.sqlite3
 .env
 .DS_STORE
 pfediagrams
-migrations
+# migrations
 media
