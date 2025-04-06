@@ -1,3 +1,50 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
+from django.utils.html import format_html
+from .models import Theme
 
-# Register your models here.
+@admin.register(Theme)
+class ThemeAdmin(ModelAdmin):
+    list_display = ('title', 'proposed_by', 'academic_year', 'academic_program', 'specialty', 'document_preview', 'created_at')
+    list_filter = ('academic_year', 'academic_program', 'specialty', 'created_at')
+    search_fields = ('title', 'proposed_by__email')
+    readonly_fields = ('created_at', 'updated_at', 'document_preview')
+
+    fieldsets = (
+        ('Theme Details', {
+            'fields': ('title', 'proposed_by', 'co_supervisors', 'specialty', 'description', 'tools')
+        }),
+        ('Academic Information', {
+            'fields': ('academic_year', 'academic_program')
+        }),
+        ('Documents', {
+            'fields': ('documents', 'document_preview'),
+            'description': 'Uploaded documents related to this theme.'
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'description': 'Automatically managed timestamps',
+        }),
+    )
+
+    def document_preview(self, obj):
+        """Show previews of related documents if they are images."""
+        if obj.documents.exists():
+            previews = []
+            for doc in obj.documents.all():
+                if doc.file and doc.file.name.endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                    previews.append(f'<img src="{doc.file.url}" width="80px" style="margin:2px;border-radius:5px;" />')
+                else:
+                    previews.append(f'<a href="{doc.file.url}" target="_blank">{doc.title} (Download)</a>')
+            return format_html(" ".join(previews))
+        return "-"
+
+    document_preview.short_description = "Document Previews"
+
+    def has_add_permission(self, request):
+        """Allow adding new themes"""
+        return True
+
+    def has_delete_permission(self, request, obj=None):
+        """Allow deleting themes"""
+        return True
