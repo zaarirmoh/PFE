@@ -5,6 +5,7 @@ from drf_yasg import openapi
 from .models import Theme
 from .serializers import ThemeSerializer
 from users.permissions import IsTeacher
+from common.pagination import StaticPagination
 
 class ThemeViewSet(viewsets.ModelViewSet):
     """
@@ -26,6 +27,11 @@ class ThemeViewSet(viewsets.ModelViewSet):
     queryset = Theme.objects.all().order_by("-created_at")
     serializer_class = ThemeSerializer
     permission_classes = [permissions.IsAuthenticated]
+<<<<<<< HEAD
+=======
+    pagination_class=[StaticPagination]
+
+>>>>>>> 3d71526121aa53b4e6f41f165382d1b5f1890151
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ["academic_year", "academic_program", "specialty", "proposed_by"]
     search_fields = ["title", "description"]
