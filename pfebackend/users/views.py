@@ -87,7 +87,8 @@ class StudentListView(BaseUserListView):
     - User must be authenticated to access this endpoint
     """
     filterset_class = StudentFilter
-    search_fields = ['first_name', 'last_name', 'email', 'username', 'student__matricule']
+    search_fields = ['first_name', 'last_name', 'email', 'username', 'student__matricule', 'student__speciality',
+        'student__skills__name']
     ordering_fields = ['last_name', 'first_name', 'student__enrollment_year', 'student__current_year']
     
     def get_queryset(self):

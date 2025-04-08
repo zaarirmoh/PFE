@@ -21,6 +21,11 @@ class Student(models.Model):
     enrollment_year = models.PositiveIntegerField(help_text="Year of admission", default=2014)
     academic_program = models.CharField(max_length=20, choices=ACADEMIC_PROGRAM_CHOICES)
     current_year = models.PositiveSmallIntegerField(help_text="Current year in the program", default=1)
+    group = models.PositiveSmallIntegerField(
+        blank=True, 
+        null=True, 
+        help_text="Student's group number"
+    )
     # For superior class: speciality can be set once the student chooses one; optional in preparatory.
     speciality = models.CharField(max_length=50, null=True, blank=True)
     academic_status = models.CharField(max_length=20, choices=ACADEMIC_STATUS_CHOICES, default='active')
@@ -45,3 +50,36 @@ class Student(models.Model):
     
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.matricule}"
+    
+    
+    
+class StudentSkill(models.Model):
+    """
+    Separate model for managing student skills with a many-to-many relationship.
+    This allows for more flexibility and easier management of skills.
+    """
+    student = models.ForeignKey(
+        'users.Student', 
+        on_delete=models.CASCADE, 
+        related_name='skills'
+    )
+    
+    name = models.CharField(max_length=100)
+    proficiency_level = models.CharField(
+        max_length=20,
+        choices=[
+            ('beginner', 'Beginner'),
+            ('intermediate', 'Intermediate'),
+            ('advanced', 'Advanced'),
+            ('expert', 'Expert')
+        ],
+        default='beginner'
+    )
+    
+    def __str__(self):
+        return f"{self.name} ({self.proficiency_level})"
+    
+    class Meta:
+        unique_together = ('student', 'name')
+        verbose_name = "Student Skill"
+        verbose_name_plural = "Student Skills"

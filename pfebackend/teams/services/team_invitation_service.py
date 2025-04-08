@@ -67,8 +67,9 @@ class TeamInvitationService:
                         'id': inviter.id,
                         'username': inviter.username,
                         'name': inviter_name,
+                        'profile_picture': inviter.profile_picture_url,
                         # Add avatar URL if available
-                        'avatar_url': getattr(inviter, 'avatar_url', '') if hasattr(inviter, 'avatar_url') else ''
+                        # 'avatar_url': getattr(inviter, 'avatar_url', '') if hasattr(inviter, 'avatar_url') else ''
                     }
                 }
                 

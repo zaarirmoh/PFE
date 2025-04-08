@@ -77,7 +77,8 @@ class TeamJoinRequestService:
                             'id': requester.id,
                             'username': requester.username,
                             'name': requester_name,
-                            'avatar_url': getattr(requester, 'avatar_url', '') if hasattr(requester, 'avatar_url') else ''
+                            'profile_picture': requester.profile_picture_url,
+                            # 'avatar_url': getattr(requester, 'avatar_url', '') if hasattr(requester, 'avatar_url') else ''
                         }
                     }
                     
