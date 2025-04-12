@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django_countries.fields import CountryField
+from phonenumber_field.modelfields import PhoneNumberField
+from django.core.validators import RegexValidator
 
 class UserManager(BaseUserManager):
     def create_user(self, email, username, first_name, last_name, password=None, **extra_fields):
@@ -53,6 +56,30 @@ class User(AbstractBaseUser):
         default="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png",
         help_text="URL of the user's profile picture"
     )
+    # Address Information
+    country = CountryField(blank_label='(select country)',default='DZ')
+    state = models.CharField(max_length=100, blank=True, null=True)
+    municipality = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Contact Information
+    phone_number = PhoneNumberField(
+        unique=True, 
+        blank=True, 
+        null=True, 
+        help_text="Enter a valid phone number with country code"
+    )
+    
+    year_of_birth = models.PositiveSmallIntegerField(
+        blank=True, 
+        null=True,
+        validators=[
+            RegexValidator(
+                regex=r'^(19\d{2}|20\d{2})$', 
+                message="Year must be between 1900 and 2099"
+            )
+        ]
+    )
+    
     is_active = models.BooleanField(default = True)
     is_staff = models.BooleanField(default = False)
     is_superuser = models.BooleanField(default = False)

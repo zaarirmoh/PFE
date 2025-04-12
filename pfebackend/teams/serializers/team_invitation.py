@@ -5,17 +5,16 @@ from teams.models import Team, TeamInvitation, TeamMembership
 User = get_user_model()
 
 
-
-
 class TeamInvitationSerializer(serializers.ModelSerializer):
     """Serializer for TeamInvitation model"""
     
     team_id = serializers.IntegerField(write_only=True, source='team')
     invitee_username = serializers.CharField(write_only=True, source='invitee')
+    message = serializers.CharField(required=False, allow_blank=True)
     
     class Meta:
         model = TeamInvitation
-        fields = ['id', 'team_id', 'invitee_username', 'status', 'created_at', 'updated_at']
+        fields = ['id', 'team_id', 'invitee_username', 'message', 'status', 'created_at', 'updated_at']
         read_only_fields = ['id', 'status', 'created_at', 'updated_at']
 
     def validate(self, data):
@@ -58,7 +57,13 @@ class TeamInvitationSerializer(serializers.ModelSerializer):
             status=TeamInvitation.STATUS_PENDING
         ).exists():
             raise serializers.ValidationError("A pending invitation already exists for this user")
-
+            
+        # Check if team is already at capacity
+        if not team.has_capacity:
+            raise serializers.ValidationError(
+                f"Team '{team.name}' has reached its maximum capacity of {team.maximum_members} members."
+            )
+            
         return data
 
     def to_representation(self, instance):
@@ -75,6 +80,7 @@ class TeamInvitationSerializer(serializers.ModelSerializer):
             'invitee': {
                 'username': instance.invitee.username
             },
+            'message': instance.message,
             'status': instance.status,
             'created_at': instance.created_at,
             'updated_at': instance.updated_at

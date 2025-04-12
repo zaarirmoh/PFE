@@ -1,5 +1,6 @@
 from django.db import transaction
 from django.utils.html import escape
+from django.core.exceptions import ValidationError
 from channels.db import database_sync_to_async
 from teams.models import TeamMembership, TeamInvitation
 import logging
@@ -11,7 +12,7 @@ class TeamInvitationService:
     """Service class for team invitation operations"""
     
     @staticmethod
-    def create_invitation(team, inviter, invitee):
+    def create_invitation(team, inviter, invitee, message=""):
         """
         Create a team invitation and send notification
         
@@ -19,33 +20,27 @@ class TeamInvitationService:
             team (Team): Team to invite to
             inviter (User): User sending the invitation
             invitee (User): User receiving the invitation
+            message (str): Optional message to include with invitation
             
         Returns:
             TeamInvitation: The created invitation
+            
+        Raises:
+            ValidationError: If validation fails
         """
         try:
             with transaction.atomic():
-                # Check if user is already a member
-                if TeamMembership.objects.filter(team=team, user=invitee).exists():
-                    raise ValueError("User is already a member of this team")
-                
-                # Check for existing pending invitation
-                existing_invitation = TeamInvitation.objects.filter(
-                    team=team,
-                    invitee=invitee,
-                    status=TeamInvitation.STATUS_PENDING
-                ).first()
-                
-                if existing_invitation:
-                    return existing_invitation
-                
-                # Create invitation
-                invitation = TeamInvitation.objects.create(
+                # Create invitation - validation will be handled by the model's clean method
+                invitation = TeamInvitation(
                     team=team,
                     inviter=inviter,
                     invitee=invitee,
-                    status=TeamInvitation.STATUS_PENDING
+                    status=TeamInvitation.STATUS_PENDING,
+                    message=message
                 )
+                
+                # This will trigger validation via full_clean in the save method
+                invitation.save()
                 
                 # Send notification
                 from notifications.services import NotificationService
@@ -58,6 +53,9 @@ class TeamInvitationService:
                 title = f"Team Invitation: {team_name}"
                 content = f"{inviter_name} has invited you to join the team '{team_name}'"
                 
+                if message:
+                    content += f"\n\nMessage: {message}"
+                
                 # Metadata for rich rendering
                 metadata = {
                     'invitation_id': invitation.id,
@@ -66,9 +64,7 @@ class TeamInvitationService:
                     'inviter': {
                         'id': inviter.id,
                         'username': inviter.username,
-                        'name': inviter_name,
-                        # Add avatar URL if available
-                        'avatar_url': getattr(inviter, 'avatar_url', '') if hasattr(inviter, 'avatar_url') else ''
+                        'name': inviter_name
                     }
                 }
                 
@@ -88,6 +84,9 @@ class TeamInvitationService:
                 
                 return invitation
                 
+        except ValidationError as e:
+            logger.error(f"Validation error creating team invitation: {str(e)}")
+            raise
         except Exception as e:
             logger.error(f"Error creating team invitation: {str(e)}")
             raise
@@ -121,66 +120,69 @@ class TeamInvitationService:
             }
             
             if response == 'accept':
-                with transaction.atomic():
-                    invitation.status = TeamInvitation.STATUS_ACCEPTED
-                    invitation.save(update_fields=['status', 'updated_at'])
+                try:
+                    with transaction.atomic():
+                        # Use the model's accept method which handles validation
+                        invitation.accept()
+                        
+                        # Notify the inviter about acceptance
+                        from notifications.services import NotificationService
+                        
+                        member_name = user.get_full_name() or user.username
+                        
+                        NotificationService.create_and_send(
+                            recipient=inviter,
+                            title=f"Invitation Accepted",
+                            content=f"{member_name} has accepted your invitation to join '{team.name}'",
+                            notification_type='team_membership',
+                            related_object=team,
+                            action_url=f"/teams/{team.id}/members/",
+                            metadata={
+                                'team_id': team.id,
+                                'member_id': user.id,
+                                'member_name': member_name,
+                                'event_type': 'invitation_accepted'
+                            }
+                        )
+                        
+                        # Get the new member's role
+                        membership = TeamMembership.objects.get(user=user, team=team)
+                        result_data['role'] = membership.role
                     
-                    # Add user to team if not already a member
-                    membership, created = TeamMembership.objects.get_or_create(
-                        user=user,
-                        team=team,
-                        defaults={'role': TeamMembership.ROLE_MEMBER}
-                    )
+                    return True, result_data
                     
-                    # Notify the inviter about acceptance
+                except ValidationError as e:
+                    return False, {'error': str(e)}
+                
+            elif response == 'decline':
+                try:
+                    # Use the model's decline method
+                    invitation.decline()
+                    
+                    # Notify inviter about declination
                     from notifications.services import NotificationService
                     
                     member_name = user.get_full_name() or user.username
                     
                     NotificationService.create_and_send(
                         recipient=inviter,
-                        title=f"Invitation Accepted",
-                        content=f"{member_name} has accepted your invitation to join '{team.name}'",
-                        notification_type='team_membership',
+                        title=f"Invitation Declined",
+                        content=f"{member_name} has declined your invitation to join '{team.name}'",
+                        notification_type='team_update',
                         related_object=team,
-                        action_url=f"/teams/{team.id}/members/",
+                        priority='low',
                         metadata={
                             'team_id': team.id,
-                            'member_id': user.id,
-                            'member_name': member_name,
-                            'event_type': 'invitation_accepted'
+                            'event_type': 'invitation_declined'
                         }
                     )
                     
-                    result_data['role'] = membership.role
+                    return True, result_data
                 
-                return True, result_data
+                except ValidationError as e:
+                    return False, {'error': str(e)}
                 
-            elif response == 'decline':
-                invitation.status = TeamInvitation.STATUS_DECLINED
-                invitation.save(update_fields=['status', 'updated_at'])
-                
-                # Notify inviter about declination
-                from notifications.services import NotificationService
-                
-                member_name = user.get_full_name() or user.username
-                
-                NotificationService.create_and_send(
-                    recipient=inviter,
-                    title=f"Invitation Declined",
-                    content=f"{member_name} has declined your invitation to join '{team.name}'",
-                    notification_type='team_update',
-                    related_object=team,
-                    priority='low',
-                    metadata={
-                        'team_id': team.id,
-                        'event_type': 'invitation_declined'
-                    }
-                )
-                
-                return True, result_data
-                
-            return False, None
+            return False, {'error': 'Invalid response. Must be "accept" or "decline".'}
             
         except TeamInvitation.DoesNotExist:
             return False, {'error': 'Invitation not found or already processed'}
@@ -249,8 +251,8 @@ class TeamInvitationService:
             if not (is_inviter or is_team_owner):
                 return False
                 
-            # Update invitation status
-            invitation.status = 'cancelled'
+            # Update invitation status using the constants from the model
+            invitation.status = TeamInvitation.STATUS_CANCELLED
             invitation.save(update_fields=['status', 'updated_at'])
             
             # Notify the invitee

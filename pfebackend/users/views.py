@@ -53,7 +53,6 @@ class BaseUserListView(generics.ListAPIView):
         context['request'] = self.request
         return context
 
-
 class StudentListView(BaseUserListView):
     """
     API endpoint to retrieve and filter student users.
@@ -64,12 +63,10 @@ class StudentListView(BaseUserListView):
     ## Query Parameters
     - Student-specific filters:
         - `enrollment_year` - Filter by year of admission (e.g., 2014)
-        - `academic_program` - Filter by program ('preparatory' or 'superior')
-        - `current_year` - Filter by current year in program (1, 2, etc.)
+        - `current_year` - Filter by current year in program ('2', '3', '4siw', '4isi', etc.)
         - `academic_status` - Filter by status ('active', 'on_leave', 'graduated')
-        - `speciality` - Filter by chosen speciality
         - `has_team` - Filter by team membership status (true/false)
-        - `show_peers_only` - Show only students in same year and program as current user (true/false)
+        - `show_peers_only` - Show only students in same year as current user (true/false)
     
     - Searching:
         - `search` - Search in first name, last name, email, username, and matricule
@@ -87,7 +84,8 @@ class StudentListView(BaseUserListView):
     - User must be authenticated to access this endpoint
     """
     filterset_class = StudentFilter
-    search_fields = ['first_name', 'last_name', 'email', 'username', 'student__matricule']
+    search_fields = ['first_name', 'last_name', 'email', 'username', 'student__matricule',
+        'student__skills__name']
     ordering_fields = ['last_name', 'first_name', 'student__enrollment_year', 'student__current_year']
     
     def get_queryset(self):
@@ -98,7 +96,7 @@ class StudentListView(BaseUserListView):
         the related student profile in the same query.
         """
         return User.objects.filter(user_type='student').select_related('student')
-    
+
 class TeacherListView(BaseUserListView):
     """
     API endpoint to retrieve and filter teacher users.

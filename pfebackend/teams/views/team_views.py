@@ -131,4 +131,4 @@ class TeamDetailView(RetrieveUpdateDestroyAPIView):
     def perform_destroy(self, instance):
         """Delete team and create notification"""
         team = self.get_object()
-        TeamService.delete_team(team, request.user)
+        TeamService.delete_team(team, self.request.user)

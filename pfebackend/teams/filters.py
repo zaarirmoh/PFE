@@ -1,6 +1,6 @@
 from django_filters import rest_framework as filters
 from django.db.models import Count, F, Q
-from teams.models import Team
+from teams.models import Team, TeamMembership
 
 class TeamFilter(filters.FilterSet):
     """
@@ -12,14 +12,13 @@ class TeamFilter(filters.FilterSet):
     # Basic filters
     name = filters.CharFilter(lookup_expr='icontains')
     description = filters.CharFilter(lookup_expr='icontains')
-    academic_year = filters.NumberFilter()
-    academic_program = filters.CharFilter()
+    academic_year = filters.CharFilter()  # Changed from NumberFilter to CharFilter to match model field
     is_verified = filters.BooleanFilter()
     
     # Date filters
     created_after = filters.DateTimeFilter(field_name='created_at', lookup_expr='gte')
     created_before = filters.DateTimeFilter(field_name='created_at', lookup_expr='lte')
-    updated_after = filters.DateTimeFilter(field_name='updated_at', lookup_expr='gte')
+    updated_after = filters.DateTimeFilter(field_name='updated_at', lookup_expr='lte')
     updated_before = filters.DateTimeFilter(field_name='updated_at', lookup_expr='lte')
     
     # Boolean filters
@@ -36,10 +35,10 @@ class TeamFilter(filters.FilterSet):
     class Meta:
         model = Team
         fields = [
-            'name', 'description', 'academic_year', 'academic_program',
-            'is_verified', 'created_after', 'created_before', 'updated_after', 
-            'updated_before', 'is_member', 'has_capacity', 'is_owner',
-            'match_student_profile', 'min_members', 'max_members', 'maximum_size'
+            'name', 'description', 'academic_year', 'is_verified', 
+            'created_after', 'created_before', 'updated_after', 'updated_before', 
+            'is_member', 'has_capacity', 'is_owner', 'match_student_profile', 
+            'min_members', 'max_members', 'maximum_size'
         ]
     
     def filter_is_member(self, queryset, name, value):
@@ -60,18 +59,22 @@ class TeamFilter(filters.FilterSet):
         """Filter for teams where the current user is the owner"""
         user = self.request.user
         if value:
-            return queryset.filter(teammembership__user=user, teammembership__role='owner')
-        return queryset.exclude(teammembership__user=user, teammembership__role='owner')
+            return queryset.filter(
+                teammembership__user=user, 
+                teammembership__role=TeamMembership.ROLE_OWNER
+            )
+        return queryset.exclude(
+            teammembership__user=user, 
+            teammembership__role=TeamMembership.ROLE_OWNER
+        )
         
     def filter_match_student_profile(self, queryset, name, value):
         """Filter for teams matching the user's student profile"""
         user = self.request.user
         if value and hasattr(user, 'student'):
             student = user.student
-            return queryset.filter(
-                academic_year=student.current_year,
-                academic_program=student.academic_program
-            )
+            # Only filtering by academic_year since academic_program was removed from Team model
+            return queryset.filter(academic_year=student.current_year)
         return queryset
     
     def filter_min_members(self, queryset, name, value):

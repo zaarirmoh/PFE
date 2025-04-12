@@ -64,7 +64,7 @@ INSTALLED_APPS = [
     'timelines',
     'common',
     'themes',
-    'django_seed'
+    # 'django_seed'
 ]
 
 MIDDLEWARE = [

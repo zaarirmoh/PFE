@@ -29,21 +29,20 @@ class TeamAdmin(ModelAdmin):
     - Team members displayed as read-only inline items
     """
     # Fields to display in the list view
-    list_display = ('name', 'academic_program', 'academic_year',
-                   'current_member_count', 'is_verified',)
+    list_display = ('name', 'academic_year', 'current_member_count', 'maximum_members', 'is_verified')
     
     # Fields to filter by in the sidebar
-    list_filter = ('is_verified', 'academic_year', 'academic_program')
+    list_filter = ('is_verified', 'academic_year')
     
     # Fields to search by
     search_fields = ('name', 'description')
     
     # Default ordering
-    ordering = ('academic_program', 'academic_year', 'name', '-created_at',)
+    ordering = ('academic_year', 'name', '-created_at')
     
     # Only is_verified can be edited
     readonly_fields = ('name', 'description', 'academic_year', 
-                      'academic_program', 'maximum_members', 'created_at', 
+                      'maximum_members', 'created_at', 
                       'updated_at', 'created_by', 'updated_by')
     
     # Display team memberships inline
@@ -54,7 +53,7 @@ class TeamAdmin(ModelAdmin):
             'fields': ('name', 'description')
         }),
         ('Academic info', {
-            'fields': ('academic_program', 'academic_year', 'maximum_members'),
+            'fields': ('academic_year', 'maximum_members'),
             'classes': ('collapse',)
         }),
         ('Verification Status', {
@@ -62,7 +61,7 @@ class TeamAdmin(ModelAdmin):
             'description': 'Administrators can verify teams to indicate official recognition.'
         }),
         ('Audit Information', {
-            'fields': ('created_at', 'created_by'),
+            'fields': ('created_at', 'created_by', 'updated_at', 'updated_by'),
             'classes': ('collapse',)
         }),
     )
@@ -92,21 +91,34 @@ class TeamAdmin(ModelAdmin):
 
 class TeamSettingsAdmin(ModelAdmin):
     """
-    Admin for global team settings
+    Admin for team settings per academic year
     """
-    list_display = ('academic_program', 'academic_year', 'maximum_members')
-    list_filter = ('academic_program', 'academic_year')
-    search_fields = ('academic_program', 'academic_year')
-    ordering = ('academic_program', 'academic_year')
-    exclude = ('created_by', 'updated_by')
+    list_display = ('academic_year', 'maximum_members')
+    list_filter = ('academic_year',)
+    search_fields = ('academic_year',)
+    ordering = ('academic_year',)
     
-    def has_add_permission(self, request):
-        return False
+    fieldsets = (
+        ('Settings', {
+            'fields': ('academic_year', 'maximum_members'),
+        }),
+        ('Audit Information', {
+            'fields': ('created_at', 'created_by', 'updated_at', 'updated_by'),
+            'classes': ('collapse',)
+        }),
+    )
     
     def has_delete_permission(self, request, obj=None):
+        """Prevent deletion of settings"""
         return False
     
+    def save_model(self, request, obj, form, change):
+        """Set created_by and updated_by when saving"""
+        if not obj.pk:  # New object
+            obj.created_by = request.user
+        obj.updated_by = request.user
+        super().save_model(request, obj, form, change)
 
-    
 admin.site.register(Team, TeamAdmin)
 admin.site.register(TeamSettings, TeamSettingsAdmin)
+# admin.site.register(TeamMembership)
