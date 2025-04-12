@@ -30,7 +30,6 @@ class TeamInvitation(TeamRequestStatusMixin, TimeStampedModel):
     message = models.TextField(blank=True, help_text="Optional message from the inviter")
     
     class Meta:
-        # unique_together = ('team', 'invitee', 'status')
         constraints = [
             models.UniqueConstraint(
                 fields=['team', 'invitee'],
@@ -77,15 +76,10 @@ class TeamInvitation(TeamRequestStatusMixin, TimeStampedModel):
                 "Only students with active status can be invited to teams."
             )
         
-        # Check academic year and program match
+        # Check academic year match
         if student.current_year != self.team.academic_year:
             raise ValidationError(
                 f"Only students in academic year {self.team.academic_year} can be invited to this team."
-            )
-        
-        if student.academic_program != self.team.academic_program:
-            raise ValidationError(
-                f"Only students in the {self.team.academic_program} program can be invited to this team."
             )
     
     def save(self, *args, **kwargs):

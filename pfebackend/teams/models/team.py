@@ -11,9 +11,9 @@ class Team(AuditableModel):
     Represents a team that can have multiple student members with different roles.
     Constraints:
     - Only students can create teams
-    - Team members must share the same academic year, program and have 'active' status
+    - Team members must share the same academic year and have 'active' status
     - Team size is limited by the global TeamSettings configuration
-    - A student can only create one team per academic year and program
+    - A student can only create one team per academic year
     """
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
@@ -24,13 +24,10 @@ class Team(AuditableModel):
     )
     
     # Team academic constraints - these will be set from the owner's student profile
-    academic_year = models.PositiveSmallIntegerField(
+    academic_year = models.CharField(
+        max_length=5,
+        choices=Student.ACADEMIC_YEAR_CHOICES,
         help_text="Academic year requirement for team members"
-    )
-    academic_program = models.CharField(
-        max_length=20, 
-        choices=Student.ACADEMIC_PROGRAM_CHOICES,
-        help_text="Academic program requirement for team members"
     )
     is_verified = models.BooleanField(default=False)
     
@@ -41,8 +38,8 @@ class Team(AuditableModel):
     )
     
     class Meta:
-        # Add unique constraint for name (case-insensitive handled in validation)
-        unique_together = [('academic_year', 'academic_program', 'name')]
+        # Add unique constraint for name per academic year
+        unique_together = [('academic_year', 'name')]
     
     def __str__(self):
         return self.name
@@ -63,10 +60,9 @@ class Team(AuditableModel):
         return self.current_member_count < self.maximum_members
     
     @property
-    def program_year_settings(self):
-        """Get the program-year settings for this team"""
+    def year_settings(self):
+        """Get the year settings for this team"""
         return TeamSettings.get_settings(
-            program=self.academic_program,
             year=self.academic_year
         )
     
@@ -75,12 +71,11 @@ class Team(AuditableModel):
         super().clean()
         
         # Ensure maximum_members doesn't exceed global limit
-        program_year_max = TeamSettings.get_maximum_members(
-            program=self.academic_program,
+        year_max = TeamSettings.get_maximum_members(
             year=self.academic_year
         )
-        if self.maximum_members > program_year_max:
-            self.maximum_members = program_year_max
+        if self.maximum_members > year_max:
+            self.maximum_members = year_max
     
     def save(self, *args, **kwargs):
         """
@@ -89,7 +84,6 @@ class Team(AuditableModel):
         """
         if not self.maximum_members:
             self.maximum_members = TeamSettings.get_maximum_members(
-                program=self.academic_program,
                 year=self.academic_year
             )
             
@@ -97,17 +91,16 @@ class Team(AuditableModel):
         super().save(*args, **kwargs)
         
     @classmethod
-    def student_has_team_for_year_program(cls, student_user, year, program):
+    def student_has_team_for_year(cls, student_user, year):
         """
-        Check if a student already owns a team for the given academic year and program.
+        Check if a student already owns a team for the given academic year.
         
         Args:
             student_user: The User object representing a student
             year: The academic year to check
-            program: The academic program to check
             
         Returns:
-            bool: True if the student already has a team for the year/program, False otherwise
+            bool: True if the student already has a team for the year, False otherwise
         """
         from .team_membership import TeamMembership
         
@@ -115,33 +108,31 @@ class Team(AuditableModel):
         owned_teams = cls.objects.filter(
             teammembership__user=student_user,
             teammembership__role=TeamMembership.ROLE_OWNER,
-            academic_year=year,
-            academic_program=program
+            academic_year=year
         )
         
         return owned_teams.exists()
     
     @classmethod
-    def student_is_member_for_year_program(cls, student_user, year, program):
+    def student_is_member_for_year(cls, student_user, year):
         """
-        Check if a student is already a member of any team for the given academic year and program.
+        Check if a student is already a member of any team for the given academic year.
         
         Args:
             student_user: The User object representing a student
             year: The academic year to check
-            program: The academic program to check
             
         Returns:
-            bool: True if the student is already a member of a team for the year/program, False otherwise
+            bool: True if the student is already a member of a team for the year, False otherwise
         """
         # Find teams where the user is a member
         member_teams = cls.objects.filter(
             members=student_user,
-            academic_year=year,
-            academic_program=program
+            academic_year=year
         )
         
         return member_teams.exists()
+    
     @classmethod
     def create_team(cls, owner, name, description=""):
         """
@@ -149,7 +140,7 @@ class Team(AuditableModel):
         - Validates that the owner is a student with active status
         - Sets the academic constraints from the owner's profile
         - Uses the global maximum_members setting
-        - Ensures the student hasn't already created a team for this year/program
+        - Ensures the student hasn't already created a team for this year
         """
         from .team_membership import TeamMembership
         
@@ -163,31 +154,28 @@ class Team(AuditableModel):
         if student.academic_status != 'active':
             raise ValidationError("Only students with active status can create teams.")
         
-        # Check if student already owns a team for this year/program
-        if cls.student_has_team_for_year_program(owner, student.current_year, student.academic_program):
+        # Check if student already owns a team for this year
+        if cls.student_has_team_for_year(owner, student.current_year):
             raise ValidationError(
-                f"You have already created a team for {student.current_year} year in the {student.academic_program} program. "
-                "A student can only create one team per academic year and program."
+                f"You have already created a team for {student.current_year} year. "
+                "A student can only create one team per academic year."
             )
             
-        # Check if the student is already a member of a team for their academic year/program
-        if cls.student_is_member_for_year_program(owner, student.current_year, student.academic_program):
+        # Check if the student is already a member of a team for their academic year
+        if cls.student_is_member_for_year(owner, student.current_year):
             raise ValidationError(
-                f"You are already a member of a team for academic year {student.current_year} in the {student.academic_program} program."
+                f"You are already a member of a team for academic year {student.current_year}."
             )
             
         max_members = TeamSettings.get_maximum_members(
-            program=student.academic_program,
             year=student.current_year
         )
-
 
         # Create the team with academic constraints from the owner
         team = cls(
             name=name,
             description=description,
             academic_year=student.current_year,
-            academic_program=student.academic_program,
             maximum_members=max_members,
             created_by=owner,
             updated_by=owner

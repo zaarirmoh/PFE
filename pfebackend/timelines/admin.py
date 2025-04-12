@@ -11,12 +11,11 @@ from django.utils.translation import gettext_lazy as _
 # Register your models here.
 class TimelineAdmin(ModelAdmin):
     list_display = (
-        'timeline_type', 'academic_program', 
-        'academic_year','is_current', 'status'
+        'timeline_type', 'academic_year', 'is_current', 'status'
     )
-    list_filter = ('is_active', 'timeline_type')
+    list_filter = ('is_active', 'timeline_type', 'academic_year')
     search_fields = ('name', 'description')
-    readonly_fields = ('slug','timeline_type',)
+    readonly_fields = ('slug', 'timeline_type',)
     actions = ['trigger_auto_team_assignment']
     
     fieldsets = (
@@ -24,8 +23,8 @@ class TimelineAdmin(ModelAdmin):
             'fields': ('slug', 'name', 'description')
         }),
         ('Timeline Type', {
-            'fields': ('timeline_type', 'academic_program', 'academic_year'),
-            'description': 'Set the type of timeline and which academic program and year it applies to.'
+            'fields': ('timeline_type', 'academic_year'),
+            'description': 'Set the type of timeline and which academic year it applies to.'
         }),
         ('Timing', {
             'fields': ('start_date', 'end_date', 'is_active'),

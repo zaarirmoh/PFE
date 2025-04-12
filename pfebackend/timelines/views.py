@@ -18,15 +18,15 @@ class TimelineListView(ListAPIView):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = TimelineFilter
     search_fields = ["name", "description", "slug"]
-    ordering_fields = ["start_date", "end_date", "academic_year", "academic_program"]
-    ordering = ["academic_program", "academic_year", "start_date"]
+    ordering_fields = ["start_date", "end_date", "academic_year"]
+    ordering = ["academic_year", "start_date"]
+    
     @swagger_auto_schema(
         manual_parameters=[
             openapi.Parameter('name', openapi.IN_QUERY, description="Filter by name (contains)", type=openapi.TYPE_STRING),
             openapi.Parameter('slug', openapi.IN_QUERY, description="Filter by slug (exact match)", type=openapi.TYPE_STRING),
             openapi.Parameter('description', openapi.IN_QUERY, description="Filter by description content", type=openapi.TYPE_STRING),
-            openapi.Parameter('academic_year', openapi.IN_QUERY, description="Filter by academic year", type=openapi.TYPE_INTEGER),
-            openapi.Parameter('academic_program', openapi.IN_QUERY, description="Filter by academic program (preparatory/superior)", type=openapi.TYPE_STRING),
+            openapi.Parameter('academic_year', openapi.IN_QUERY, description="Filter by academic year", type=openapi.TYPE_STRING),
             openapi.Parameter('timeline_type', openapi.IN_QUERY, description="Filter by timeline type (groups/themes/work/soutenance)", type=openapi.TYPE_STRING),
             openapi.Parameter('start_date_after', openapi.IN_QUERY, description="Filter by start date after", type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME),
             openapi.Parameter('start_date_before', openapi.IN_QUERY, description="Filter by start date before", type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME),
@@ -51,8 +51,7 @@ class TimelineListView(ListAPIView):
             - `name` (str) → Filter by name (contains match)
             - `slug` (str) → Filter by slug (exact match)
             - `description` (str) → Filter by description content
-            - `academic_year` (int) → Filter by academic year
-            - `academic_program` (str) → Filter by program (e.g., "preparatory", "superior")
+            - `academic_year` (str) → Filter by academic year (e.g., "2", "3", "4siw")
             - `timeline_type` (str) → Filter by type (e.g., "groups", "themes")
         
         - Date range filters:
@@ -75,7 +74,7 @@ class MyTimelinesView(ListAPIView):
     """
     Get timelines relevant to the authenticated student.
     
-    Returns timelines matching the student's academic program and year.
+    Returns timelines matching the student's academic year.
     """
     serializer_class = TimelineSerializer
     permission_classes = [IsAuthenticated, IsStudent]
@@ -90,7 +89,6 @@ class MyTimelinesView(ListAPIView):
     def get_queryset(self):
         student = self.request.user.student
         return Timeline.objects.filter(
-            academic_program=student.academic_program,
             academic_year=student.current_year,
             is_active=True
         )

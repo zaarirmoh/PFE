@@ -13,10 +13,8 @@ class StudentSkillFilter(filters.FilterSet):
         
 class StudentFilter(filters.FilterSet):
     enrollment_year = filters.NumberFilter(field_name="student__enrollment_year")
-    academic_program = filters.CharFilter(field_name="student__academic_program")
-    current_year = filters.NumberFilter(field_name="student__current_year")
+    current_year = filters.CharFilter(field_name="student__current_year")
     academic_status = filters.CharFilter(field_name="student__academic_status")
-    speciality = filters.CharFilter(field_name="student__speciality")
     has_team = filters.BooleanFilter(method='filter_has_team')
     show_peers_only = filters.BooleanFilter(method='filter_peers_only')
     
@@ -25,8 +23,8 @@ class StudentFilter(filters.FilterSet):
 
     class Meta:
         model = User
-        fields = ['enrollment_year', 'academic_program', 'current_year', 
-                 'academic_status', 'speciality', 'has_team', 'show_peers_only']
+        fields = ['enrollment_year', 'current_year', 
+                 'academic_status', 'has_team', 'show_peers_only']
         
     # def filter_by_skill_name(self, queryset, name, value):
     #     return queryset.filter(skills__name__icontains=value)
@@ -37,13 +35,11 @@ class StudentFilter(filters.FilterSet):
     def filter_has_team(self, queryset, name, value):
         if value:
             return queryset.filter(
-                teams__academic_year=F('student__current_year'),
-                teams__academic_program=F('student__academic_program')
+                teams__academic_year=F('student__current_year')
             ).distinct()
         else:
             return queryset.exclude(
-                teams__academic_year=F('student__current_year'),
-                teams__academic_program=F('student__academic_program')
+                teams__academic_year=F('student__current_year')
             ).distinct()
         
     def filter_peers_only(self, queryset, name, value):
@@ -58,10 +54,9 @@ class StudentFilter(filters.FilterSet):
         # Get the student profile of the requesting user
         try:
             student = request.user.student
-            # Filter to only show peers (same year and program)
+            # Filter to only show peers (same year)
             filtered_queryset = queryset.filter(
-                student__current_year=student.current_year,
-                student__academic_program=student.academic_program
+                student__current_year=student.current_year
             )
             # Exclude the requesting student
             filtered_queryset = filtered_queryset.exclude(id=request.user.id)
@@ -69,7 +64,6 @@ class StudentFilter(filters.FilterSet):
         except AttributeError:
             # If user doesn't have a student profile, return unfiltered
             return queryset
-
 
 class TeacherFilter(filters.FilterSet):
     department = filters.CharFilter(field_name="teacher__department")

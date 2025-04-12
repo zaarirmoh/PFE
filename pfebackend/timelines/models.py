@@ -22,14 +22,17 @@ class Timeline(models.Model):
         (SOUTENANCE, _('Soutenance')),
     ]
     
-    # Academic program choices
-    PREPARATORY = 'preparatory'
-    SUPERIOR = 'superior'
-    
-    ACADEMIC_PROGRAM_CHOICES = [
-        (PREPARATORY, _('Preparatory')),
-        (SUPERIOR, _('Superior')),
-    ]
+    # Academic year choices - matching Student model
+    ACADEMIC_YEAR_CHOICES = (
+        ('2', '2nd Year'),
+        ('3', '3rd Year'),
+        ('4siw', '4th Year SIW'),
+        ('4isi', '4th Year ISI'),
+        ('4iasd', '4th Year IASD'),
+        ('5siw', '5th Year SIW'),
+        ('5isi', '5th Year ISI'),
+        ('5iasd', '5th Year IASD'),
+    )
     
     # Fields
     slug = models.CharField(
@@ -63,47 +66,34 @@ class Timeline(models.Model):
         choices=TIMELINE_CHOICES,
         help_text=_("Type of timeline")
     )
-    academic_program = models.CharField(
-        max_length=20,
-        choices=ACADEMIC_PROGRAM_CHOICES,
-        help_text=_("Academic program this timeline applies to")
-    )
-    academic_year = models.PositiveSmallIntegerField(
-        help_text=_("Academic year this timeline applies to (1, 2, or 3)")
+    academic_year = models.CharField(
+        max_length=5,
+        choices=ACADEMIC_YEAR_CHOICES,
+        help_text=_("Academic year this timeline applies to")
     )
     
     class Meta:
-        ordering = ['academic_program', 'academic_year', 'start_date', 'timeline_type']
+        ordering = ['academic_year', 'start_date', 'timeline_type']
         verbose_name = _("Timeline")
         verbose_name_plural = _("Timelines")
-        unique_together = [['timeline_type', 'academic_program', 'academic_year']]
+        unique_together = [['timeline_type', 'academic_year']]
     
     def __str__(self):
-        return f"{self.name} ({self.get_academic_program_display()} Year {self.academic_year})"
+        return f"{self.name} ({self.get_academic_year_display()})"
     
     def clean(self):
         """Ensure timeline constraints are met."""
         if self.end_date and self.start_date and self.end_date <= self.start_date:
             raise ValidationError(_("End date must be after start date"))
-        
-        # Validate academic_year based on academic_program
-        if self.academic_program == self.PREPARATORY and self.academic_year not in [1, 2]:
-            raise ValidationError(_("For preparatory program, academic year must be 1 or 2"))
-        elif self.academic_program == self.SUPERIOR and self.academic_year not in [1, 2, 3]:
-            raise ValidationError(_("For superior program, academic year must be 1, 2, or 3"))
     
     def save(self, *args, **kwargs):
         """Override save to ensure validation is run."""
         # Generate slug if not provided
         if not self.slug:
-            self.slug = f"{self.timeline_type}-{self.academic_program}-{self.academic_year}"
+            self.slug = f"{self.timeline_type}-{self.academic_year}"
         
         self.clean()
         super().save(*args, **kwargs)
-    
-
-    def __str__(self):
-        return f"{self.name} (Year: {self.academic_year}, Program: {self.academic_program})"
     
     @property
     def is_current(self):
@@ -151,14 +141,13 @@ class Timeline(models.Model):
             return 'active'
             
     @classmethod
-    def get_current_timeline(cls, timeline_type, academic_program, academic_year):
+    def get_current_timeline(cls, timeline_type, academic_year):
         """
-        Get the current timeline for the given type, program and year.
+        Get the current timeline for the given type and year.
         
         Args:
             timeline_type (str): The type of timeline (groups, themes, etc.)
-            academic_program (str): The academic program (preparatory, superior)
-            academic_year (int): The academic year (1, 2, or 3)
+            academic_year (str): The academic year code ('2', '3', '4siw', etc.)
             
         Returns:
             Timeline or None: The current timeline or None if no active timeline exists
@@ -166,7 +155,6 @@ class Timeline(models.Model):
         try:
             return cls.objects.get(
                 timeline_type=timeline_type,
-                academic_program=academic_program,
                 academic_year=academic_year,
                 is_active=True,
                 start_date__lte=timezone.now(),

@@ -2,7 +2,7 @@ import random
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from faker import Faker
-from users.models import Student, Teacher, Administrator
+from users.models import Student, Teacher, Administrator, StudentSkill
 
 User = get_user_model()
 
@@ -44,24 +44,40 @@ class Command(BaseCommand):
                 user_type='student'
             )
             
-            # Create student profile with valid current_year based on academic_program
-            academic_program = random.choice(['preparatory', 'superior'])
+            # Choose a random academic year based on the ACADEMIC_YEAR_CHOICES
+            academic_year_choices = [
+                '2', '3', '4siw', '4isi', '4iasd', '5siw', '5isi', '5iasd'
+            ]
             
-            # Set current_year according to constraints
-            if academic_program == 'preparatory':
-                current_year = random.randint(1, 2)
-            else:  # superior
-                current_year = random.randint(1, 3)
-                
-            Student.objects.create(
+            # Create student profile with valid current_year
+            student = Student.objects.create(
                 user=user,
                 matricule=f"STU{i+1:04d}",
                 enrollment_year=random.randint(2018, 2024),
-                academic_program=academic_program,
-                current_year=current_year,
-                speciality=fake.job() if academic_program == 'superior' else None,
-                academic_status='active'
+                current_year=random.choice(academic_year_choices),
+                # group=random.randint(1, 6),
+                academic_status=random.choice(['active'])
             )
+            
+            # Add some random skills for each student
+            available_skills = [
+                "Python", "Java", "JavaScript", "HTML/CSS", "React", 
+                "Django", "SQL", "Data Analysis", "Machine Learning",
+                "UI/UX Design", "Project Management", "Network Security"
+            ]
+            
+            # Add 1-4 random skills for each student
+            num_skills = random.randint(1, 4)
+            for _ in range(num_skills):
+                skill_name = random.choice(available_skills)
+                proficiency = random.choice(['beginner', 'intermediate', 'advanced', 'expert'])
+                
+                # Create the skill if it doesn't already exist for this student
+                StudentSkill.objects.get_or_create(
+                    student=student,
+                    name=skill_name,
+                    defaults={'proficiency_level': proficiency}
+                )
         
         # Create teachers
         self.stdout.write(f'Creating {num_teachers} teachers...')

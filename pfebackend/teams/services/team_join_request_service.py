@@ -39,7 +39,7 @@ class TeamJoinRequestService:
                 if existing_request:
                     return existing_request
                 
-                # Create join request
+                # Create join request - validation will happen in the model's clean method
                 join_request = TeamJoinRequest.objects.create(
                     team=team,
                     requester=requester,
@@ -78,7 +78,6 @@ class TeamJoinRequestService:
                             'username': requester.username,
                             'name': requester_name,
                             'profile_picture': requester.profile_picture_url,
-                            # 'avatar_url': getattr(requester, 'avatar_url', '') if hasattr(requester, 'avatar_url') else ''
                         }
                     }
                     
@@ -141,69 +140,70 @@ class TeamJoinRequestService:
             }
             
             if response == 'accept':
-                with transaction.atomic():
-                    # Add user to team if not already a member
-                    membership, created = TeamMembership.objects.get_or_create(
-                        user=requester,
-                        team=team,
-                        defaults={'role': TeamMembership.ROLE_MEMBER}
-                    )
+                try:
+                    with transaction.atomic():
+                        # Use the model's accept method which handles validation and membership creation
+                        join_request.accept()
+                        
+                        # Notify the requester about acceptance
+                        from notifications.services import NotificationService
+                        
+                        owner_name = user.get_full_name() or user.username
+                        
+                        NotificationService.create_and_send(
+                            recipient=requester,
+                            title=f"Join Request Accepted",
+                            content=f"{owner_name} has accepted your request to join '{team.name}'",
+                            notification_type='team_membership',
+                            related_object=team,
+                            action_url=f"/teams/{team.id}/",
+                            metadata={
+                                'team_id': team.id,
+                                'owner_name': owner_name,
+                                'event_type': 'join_request_accepted'
+                            }
+                        )
+                        
+                        # Get the newly created membership
+                        membership = TeamMembership.objects.get(
+                            user=requester,
+                            team=team
+                        )
+                        result_data['role'] = membership.role
                     
-                    # # Update request status
-                    # join_request.status = TeamJoinRequest.STATUS_ACCEPTED
-                    # join_request.save(update_fields=['status', 'updated_at'])
-                    TeamJoinRequest.objects.filter(id=join_request.id).update(
-                        status=TeamJoinRequest.STATUS_ACCEPTED, 
-                        updated_at=timezone.now()
-                    )
+                    return True, result_data
+                except Exception as e:
+                    logger.error(f"Error accepting join request: {str(e)}")
+                    return False, {'error': str(e)}
+                
+            elif response == 'decline':
+                try:
+                    # Use the model's decline method
+                    join_request.decline()
                     
-                    # Notify the requester about acceptance
+                    # Notify requester about declination
                     from notifications.services import NotificationService
                     
                     owner_name = user.get_full_name() or user.username
                     
                     NotificationService.create_and_send(
                         recipient=requester,
-                        title=f"Join Request Accepted",
-                        content=f"{owner_name} has accepted your request to join '{team.name}'",
-                        notification_type='team_membership',
+                        title=f"Join Request Declined",
+                        content=f"{owner_name} has declined your request to join '{team.name}'",
+                        notification_type='team_update',
                         related_object=team,
-                        action_url=f"/teams/{team.id}/",
+                        priority='medium',
                         metadata={
                             'team_id': team.id,
                             'owner_name': owner_name,
-                            'event_type': 'join_request_accepted'
+                            'event_type': 'join_request_declined'
                         }
                     )
                     
-                    result_data['role'] = membership.role
-                
-                return True, result_data
-                
-            elif response == 'decline':
-                join_request.status = TeamJoinRequest.STATUS_DECLINED
-                join_request.save(update_fields=['status', 'updated_at'])
-                
-                # Notify requester about declination
-                from notifications.services import NotificationService
-                
-                owner_name = user.get_full_name() or user.username
-                
-                NotificationService.create_and_send(
-                    recipient=requester,
-                    title=f"Join Request Declined",
-                    content=f"{owner_name} has declined your request to join '{team.name}'",
-                    notification_type='team_update',
-                    related_object=team,
-                    priority='medium',
-                    metadata={
-                        'team_id': team.id,
-                        'owner_name': owner_name,
-                        'event_type': 'join_request_declined'
-                    }
-                )
-                
-                return True, result_data
+                    return True, result_data
+                except Exception as e:
+                    logger.error(f"Error declining join request: {str(e)}")
+                    return False, {'error': str(e)}
                 
             return False, None
             
@@ -266,7 +266,7 @@ class TeamJoinRequestService:
             )
                 
             # Update request status
-            join_request.status = 'cancelled'
+            join_request.status = TeamJoinRequest.STATUS_CANCELLED
             join_request.save(update_fields=['status', 'updated_at'])
             
             # Notify team owners

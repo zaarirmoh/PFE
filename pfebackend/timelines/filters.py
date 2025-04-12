@@ -14,8 +14,7 @@ class TimelineFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr='icontains')
     slug = filters.CharFilter(lookup_expr='iexact')
     description = filters.CharFilter(lookup_expr='icontains')
-    academic_year = filters.NumberFilter()
-    academic_program = filters.CharFilter(lookup_expr='iexact')
+    academic_year = filters.CharFilter(lookup_expr='iexact')
     timeline_type = filters.CharFilter(lookup_expr='iexact')
     
     # Date range filters
@@ -37,7 +36,7 @@ class TimelineFilter(filters.FilterSet):
     class Meta:
         model = Timeline
         fields = [
-            'name', 'slug', 'description', 'academic_year', 'academic_program', 
+            'name', 'slug', 'description', 'academic_year',
             'timeline_type', 'is_active', 'is_current', 'status',
             'start_date_after', 'start_date_before', 
             'end_date_after', 'end_date_before',
@@ -129,8 +128,7 @@ class TimelineFilter(filters.FilterSet):
             
         student = user.student
         
-        # Filter by student's academic program and current year
+        # Filter by student's academic year
         return queryset.filter(
-            academic_program=student.academic_program,
             academic_year=student.current_year
         )

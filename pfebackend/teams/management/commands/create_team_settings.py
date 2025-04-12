@@ -1,9 +1,10 @@
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from teams.models import TeamSettings
+from users.models import Student
 
 class Command(BaseCommand):
-    help = 'Create team settings for specific academic program-year combinations'
+    help = 'Create team settings for specific academic years'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -19,21 +20,15 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        # Define the specific program-year combinations we need
-        program_year_combinations = [
-            ('preparatory', 1),
-            ('preparatory', 2),
-            ('superior', 1),
-            ('superior', 2),
-            ('superior', 3),
-        ]
+        # Get all possible academic years from Student model
+        academic_years = [year_choice[0] for year_choice in Student.ACADEMIC_YEAR_CHOICES]
         
         max_members = options['max_members']
         force_update = options['force']
         
-        self.stdout.write(self.style.NOTICE('Creating or updating team settings for specific combinations:'))
-        for program, year in program_year_combinations:
-            self.stdout.write(self.style.NOTICE(f'- {program.capitalize()} Year {year}'))
+        self.stdout.write(self.style.NOTICE('Creating or updating team settings for all academic years:'))
+        for year in academic_years:
+            self.stdout.write(self.style.NOTICE(f'- {year}'))
         self.stdout.write(self.style.NOTICE(f'Maximum members: {max_members}'))
         
         created_count = 0
@@ -41,11 +36,10 @@ class Command(BaseCommand):
         skipped_count = 0
         
         with transaction.atomic():
-            for program, year in program_year_combinations:
+            for year in academic_years:
                 try:
                     # Try to get existing settings
                     settings, created = TeamSettings.objects.get_or_create(
-                        academic_program=program,
                         academic_year=year,
                         defaults={
                             'maximum_members': max_members,
@@ -55,7 +49,7 @@ class Command(BaseCommand):
                     if created:
                         created_count += 1
                         self.stdout.write(
-                            self.style.SUCCESS(f'Created settings for {program.capitalize()} Year {year}')
+                            self.style.SUCCESS(f'Created settings for Year {year}')
                         )
                     elif force_update:
                         # Update existing settings
@@ -63,17 +57,17 @@ class Command(BaseCommand):
                         settings.save()
                         updated_count += 1
                         self.stdout.write(
-                            self.style.WARNING(f'Updated settings for {program.capitalize()} Year {year}')
+                            self.style.WARNING(f'Updated settings for Year {year}')
                         )
                     else:
                         skipped_count += 1
                         self.stdout.write(
-                            self.style.NOTICE(f'Skipped existing settings for {program.capitalize()} Year {year} (use --force to update)')
+                            self.style.NOTICE(f'Skipped existing settings for Year {year} (use --force to update)')
                         )
                         
                 except Exception as e:
                     self.stdout.write(
-                        self.style.ERROR(f'Error creating settings for {program.capitalize()} Year {year}: {str(e)}')
+                        self.style.ERROR(f'Error creating settings for Year {year}: {str(e)}')
                     )
         
         self.stdout.write(self.style.SUCCESS(f'Operation complete.'))

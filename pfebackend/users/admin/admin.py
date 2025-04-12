@@ -32,7 +32,7 @@ class CustomUserAdmin(BaseUserAdmin, ModelAdmin):
     
     list_display = ('email', 'username', 'user_type', 'is_active', 'is_staff', 'is_superuser')
     exclude = ('password',)
-    list_filter = ('user_type', AcademicProgramYearFilter)
+    list_filter = ('user_type', AcademicYearFilter)
     
     # Set filter_horizontal to an empty tuple since we don't have groups or user_permissions
     filter_horizontal = ()

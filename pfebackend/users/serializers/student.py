@@ -13,9 +13,7 @@ class StudentSerializer(serializers.ModelSerializer):
         fields = (
             'matricule',
             'enrollment_year',
-            'academic_program',
             'current_year',
-            'speciality',
             'academic_status',
             'skills',
         )

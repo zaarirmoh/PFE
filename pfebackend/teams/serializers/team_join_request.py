@@ -63,15 +63,10 @@ class TeamJoinRequestSerializer(serializers.ModelSerializer):
                 "Only students with active status can request to join teams."
             )
         
-        # Check academic year and program match
+        # Check academic year match
         if student.current_year != team.academic_year:
             raise serializers.ValidationError(
                 f"Only students in academic year {team.academic_year} can join this team."
-            )
-        
-        if student.academic_program != team.academic_program:
-            raise serializers.ValidationError(
-                f"Only students in the {team.academic_program} program can join this team."
             )
 
         return data
