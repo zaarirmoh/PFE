@@ -2,8 +2,8 @@ from rest_framework import viewsets, permissions, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-from models.project_models import ThemeChoice, ThemeAssignment
-from serializers.theme_assignment_serializers import ThemeChoiceSerializer, ThemeAssignmentSerializer
+from themes.models import ThemeChoice, ThemeAssignment
+from themes.serializers import ThemeChoiceSerializer, ThemeAssignmentSerializer
 from users.permissions import IsStudent, IsTeacher, IsAdministrator
 from teams.permissions import IsTeamOwner
 from teams.models import Team
