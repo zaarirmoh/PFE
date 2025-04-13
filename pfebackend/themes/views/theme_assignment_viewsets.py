@@ -20,6 +20,8 @@ class ThemeChoiceViewSet(viewsets.ModelViewSet):
     pagination_class = StaticPagination
     
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return ThemeChoice.objects.none()
         user = self.request.user
         
         if user.user_type == 'administrator':

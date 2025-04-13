@@ -1,5 +1,6 @@
 from .project_models import *
 from .theme_models import *
+from .supervision_request import *
 
 
 __all__ = [
@@ -7,4 +8,5 @@ __all__ = [
     'ThemeRanking',
     'ThemeAssignment',
     'Theme',
+    'ThemeSupervisionRequest',
 ]
