@@ -27,7 +27,7 @@ class ThemeViewSet(viewsets.ModelViewSet):
     queryset = Theme.objects.all().order_by("-created_at")
     serializer_class = ThemeSerializer
     permission_classes = [permissions.IsAuthenticated]
-    pagination_class=[StaticPagination]
+    pagination_class = StaticPagination
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ["academic_year", "academic_program", "specialty", "proposed_by"]
