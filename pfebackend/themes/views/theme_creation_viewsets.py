@@ -2,8 +2,8 @@ from rest_framework import viewsets, permissions, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from ..models.theme_models import Theme
-from ..serializers.theme_creation_serializers import ThemeSerializer
+from themes.models.theme_models import Theme
+from themes.serializers.theme_creation_serializers import ThemeSerializer
 from users.permissions import IsTeacher
 from common.pagination import StaticPagination
 

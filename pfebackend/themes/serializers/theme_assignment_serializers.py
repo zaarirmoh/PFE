@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from themes.models.project_models import ThemeChoice,ThemeRanking,ThemeAssignment
+from ..models.project_models import *
 
 
 class ThemeRankingSerializer(serializers.ModelSerializer):
