@@ -1,7 +1,7 @@
 from django.contrib import admin
 from unfold.admin import ModelAdmin
 from django.utils.html import format_html
-from .models import Theme
+from .models.theme_models import Theme
 
 @admin.register(Theme)
 class ThemeAdmin(ModelAdmin):

@@ -2,8 +2,8 @@ from rest_framework import viewsets, permissions, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from .models import Theme
-from .serializers import ThemeSerializer
+from ..models.theme_models import Theme
+from ..serializers.theme_creation_serializers import ThemeSerializer
 from users.permissions import IsTeacher
 from common.pagination import StaticPagination
 
@@ -28,7 +28,6 @@ class ThemeViewSet(viewsets.ModelViewSet):
     serializer_class = ThemeSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StaticPagination
-
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ["academic_year", "academic_program", "specialty", "proposed_by"]
     search_fields = ["title", "description"]
