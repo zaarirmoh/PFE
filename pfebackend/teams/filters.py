@@ -10,7 +10,7 @@ class TeamFilter(filters.FilterSet):
     additional computed properties like membership status and capacity.
     """
     # Basic filters
-    name = filters.CharFilter(lookup_expr='icontains')
+    # name = filters.CharFilter(lookup_expr='icontains')
     description = filters.CharFilter(lookup_expr='icontains')
     academic_year = filters.CharFilter()  # Changed from NumberFilter to CharFilter to match model field
     is_verified = filters.BooleanFilter()

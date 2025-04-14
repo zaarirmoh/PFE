@@ -1,5 +1,5 @@
 # themes/models.py (add to existing file)
-from common.models import AuditableModel
+from common.models import AuditableModel, TimeStampedModel
 from django.db import models
 from .theme_models  import *
 class ThemeChoice(AuditableModel):
@@ -37,16 +37,14 @@ class ThemeRanking(models.Model):
     def __str__(self):
         return f"{self.theme.title} (Rank: {self.rank})"
 
-class ThemeAssignment(AuditableModel):
+class ThemeAssignment(TimeStampedModel):
     """
     Represents the final assignment of a theme to a team.
     """
     team = models.OneToOneField('teams.Team', on_delete=models.CASCADE, related_name='assigned_theme')
     theme = models.OneToOneField(Theme, on_delete=models.CASCADE, related_name='assigned_team')
     assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='theme_assignments')
-    assigned_date = models.DateTimeField(auto_now_add=True)
-    notes = models.TextField(blank=True, null=True)
-    
+
     def __str__(self):
         return f"{self.theme.title} assigned to {self.team.name}"
     

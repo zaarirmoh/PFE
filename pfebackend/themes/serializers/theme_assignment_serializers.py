@@ -86,5 +86,6 @@ class ThemeAssignmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = ThemeAssignment
         fields = ('id', 'team', 'team_name', 'theme', 'theme_title', 
-                  'assigned_by', 'assigned_by_name', 'assigned_date', 'notes')
+                  'assigned_by', 'assigned_by_name')
         read_only_fields = ('assigned_date', 'assigned_by')
+        
