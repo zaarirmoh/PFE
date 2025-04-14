@@ -3,55 +3,13 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from themes.models import ThemeChoice, ThemeAssignment
-from themes.serializers import ThemeChoiceSerializer, ThemeAssignmentSerializer
+from themes.serializers import ThemeAssignmentSerializer
 from users.permissions import IsStudent, IsTeacher, IsAdministrator
 from teams.permissions import IsTeamOwner
 from teams.models import Team
 from common.pagination import StaticPagination
 
-class ThemeChoiceViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint for teams to submit and manage their theme choices.
-    """
-    serializer_class = ThemeChoiceSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['team', 'is_final']
-    pagination_class = StaticPagination
-    
-    def get_queryset(self):
-        if getattr(self, 'swagger_fake_view', False):
-            return ThemeChoice.objects.none()
-        user = self.request.user
-        
-        if user.user_type == 'administrator':
-            return ThemeChoice.objects.all()
-            
-        elif user.user_type == 'teacher':
-            return ThemeChoice.objects.all()  # This could be refined based on your team supervision model
-            
-        elif user.user_type == 'student':
-            # Get teams where the student is a member
-            user_teams = Team.objects.filter(
-                teammember__user=user,
-                teammember__status='accepted'
-            )
-            return ThemeChoice.objects.filter(team__in=user_teams)
-            
-        return ThemeChoice.objects.none()
-    
-    def perform_create(self, serializer):
-        user = self.request.user
-        team = serializer.validated_data.get('team')
-        
-        serializer.save()
-    
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update']:
-            return [permissions.IsAuthenticated(), IsStudent(),IsTeamOwner()]
-        elif self.action == 'destroy':
-            return [permissions.IsAuthenticated(), IsAdministrator()]
-        return [permissions.IsAuthenticated()]
+
 
 class ThemeAssignmentViewSet(viewsets.ModelViewSet):
     """

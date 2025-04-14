@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views.theme_creation_viewsets import ThemeViewSet
-from .views.theme_assignment_viewsets import ThemeChoiceViewSet, ThemeAssignmentViewSet
+from .views.theme_assignment_viewsets import ThemeAssignmentViewSet
 from .views.theme_supervision_views import (
     TeamSupervisionRequestListView,
     UserSupervisionRequestListView,

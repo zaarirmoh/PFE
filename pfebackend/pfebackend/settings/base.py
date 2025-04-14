@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'common',
     'themes',
     # 'django_seed'
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -190,6 +191,14 @@ SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,
     'JSON_EDITOR': True,
 }
+
+
+# CELERY SETTINGS
+CELERY_BROKER_URL = 'redis://:my_password@localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_BACKEND = 'redis://:my_password@localhost:6379/0'
+
 
 
 STATIC_URL = '/static/'
