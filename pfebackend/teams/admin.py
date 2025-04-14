@@ -29,7 +29,7 @@ class TeamAdmin(ModelAdmin):
     - Team members displayed as read-only inline items
     """
     # Fields to display in the list view
-    list_display = ('name', 'academic_year', 'current_member_count', 'maximum_members', 'is_verified')
+    list_display = ('academic_year', 'current_member_count', 'maximum_members', 'is_verified')
     
     # Fields to filter by in the sidebar
     list_filter = ('is_verified', 'academic_year')
@@ -38,10 +38,10 @@ class TeamAdmin(ModelAdmin):
     search_fields = ('name', 'description')
     
     # Default ordering
-    ordering = ('academic_year', 'name', '-created_at')
+    ordering = ('academic_year', '-created_at')
     
     # Only is_verified can be edited
-    readonly_fields = ('name', 'description', 'academic_year', 
+    readonly_fields = ('description', 'academic_year', 
                       'maximum_members', 'created_at', 
                       'updated_at', 'created_by', 'updated_by')
     
@@ -50,7 +50,7 @@ class TeamAdmin(ModelAdmin):
     
     fieldsets = (
         ('Team info', {
-            'fields': ('name', 'description')
+            'fields': ('description',)
         }),
         ('Academic info', {
             'fields': ('academic_year', 'maximum_members'),
