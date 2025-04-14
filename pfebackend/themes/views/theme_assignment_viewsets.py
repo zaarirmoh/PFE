@@ -16,6 +16,7 @@ class ThemeChoiceViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['team', 'is_final']
+    pagination_class = StaticPagination
     
     def get_queryset(self):
         user = self.request.user
@@ -56,6 +57,7 @@ class ThemeAssignmentViewSet(viewsets.ModelViewSet):
     queryset = ThemeAssignment.objects.all()
     serializer_class = ThemeAssignmentSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = StaticPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['team', 'theme']
     search_fields = ['team__name', 'theme__title', 'notes']
