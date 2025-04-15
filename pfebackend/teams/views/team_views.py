@@ -1,3 +1,4 @@
+import uuid
 from rest_framework import permissions, filters
 from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
@@ -25,7 +26,6 @@ class TeamListCreateView(ListCreateAPIView):
     
     ## Query Parameters
     - Basic filters:
-        - `name` - Filter by name (contains, case-insensitive)
         - `description` - Filter by description (contains, case-insensitive)
         - `academic_year` - Filter by academic year
         - `academic_program` - Filter by academic program
@@ -85,9 +85,11 @@ class TeamListCreateView(ListCreateAPIView):
     def perform_create(self, serializer):
         """Create a new team with the current user as owner"""
         try:
-                # Use TeamService to create the team
+            generated_name = str(uuid.uuid4())
+                
+            # Use TeamService to create the team
             team = TeamService.create_team(
-                name=serializer.validated_data['name'],
+                name=generated_name,
                 description=serializer.validated_data.get('description', ''),
                 owner=self.request.user
             )
