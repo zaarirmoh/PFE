@@ -59,7 +59,7 @@ class User(AbstractBaseUser):
     # Address Information
     country = CountryField(blank_label='(select country)',default='DZ')
     state = models.CharField(max_length=100, blank=True, null=True)
-    municipality = models.CharField(max_length=100, blank=True, null=True)
+    # postal_code = models.CharField(max_length=20, blank=True, null=True)
     
     # Contact Information
     phone_number = PhoneNumberField(
