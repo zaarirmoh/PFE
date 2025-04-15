@@ -93,11 +93,10 @@ class ThemeSerializer(serializers.ModelSerializer):
         """
         Override create to handle Many-to-Many relationships properly.
         """
-        co_supervisors_data = validated_data.pop('co_supervisors', [])
+        co_supervisors = validated_data.pop('co_supervisors', [])
         document_ids = validated_data.pop('document_ids', [])
-
         theme = Theme.objects.create(**validated_data)
-        theme.co_supervisors.set(co_supervisors_data)
+        theme.co_supervisors.set(co_supervisors)
         theme.documents.set(document_ids)
 
         return theme

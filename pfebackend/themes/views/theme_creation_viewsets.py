@@ -29,7 +29,7 @@ class ThemeViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StaticPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ["academic_year", "academic_program", "specialty", "proposed_by"]
+    filterset_fields = ["academic_year", "proposed_by"]
     search_fields = ["title", "description"]
     ordering_fields = ["created_at", "title"]
 
@@ -104,7 +104,6 @@ class ThemeViewSet(viewsets.ModelViewSet):
                     items=openapi.Items(type=openapi.TYPE_INTEGER),
                     description="List of co-supervising teachers"
                 ),
-                "specialty": openapi.Schema(type=openapi.TYPE_STRING, description="Specialty of the theme"),
                 "description": openapi.Schema(type=openapi.TYPE_STRING, description="Detailed description"),
                 "tools": openapi.Schema(type=openapi.TYPE_STRING, description="Comma-separated list of tools used"),
                 "documents": openapi.Schema(
@@ -112,8 +111,7 @@ class ThemeViewSet(viewsets.ModelViewSet):
                     items=openapi.Items(type=openapi.TYPE_INTEGER),
                     description="List of document IDs associated with the theme"
                 ),
-                "academic_year": openapi.Schema(type=openapi.TYPE_INTEGER, description="Academic year of the theme"),
-                "academic_program": openapi.Schema(type=openapi.TYPE_STRING, description="Academic program (preparatory/superior)")
+                "academic_year": openapi.Schema(type=openapi.TYPE_STRING, description="Academic year of the theme"),
             }
         ),
         responses={201: ThemeSerializer()}

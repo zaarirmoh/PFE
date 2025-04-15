@@ -11,29 +11,25 @@ class Theme(AuditableModel):
     title = models.CharField(max_length=255)
     proposed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="proposed_themes")
     co_supervisors = models.ManyToManyField(User, related_name="co_supervised_themes", blank=True)
-    specialty = models.CharField(
-        max_length=100,
-        choices=[
-            ('IASD', 'IASD'),
-            ('SIW', 'SIW'),
-            ('ISI', 'ISI'),
-            ('1CS', '1CS'),
-            ('2CPI', '2CPI'),
-        ]
-    )
+
     description = models.TextField()
     tools = models.TextField(help_text="Enter tools")
     documents = models.ManyToManyField(Document, related_name="themes", blank=True)
 
-    # Academic year and program
-    academic_year = models.PositiveSmallIntegerField(help_text="Must match the academic year of the linked Timeline")
-    academic_program = models.CharField(
-        max_length=20,
-        choices=[
-            ('preparatory', 'Preparatory'),
-            ('superior', 'Superior'),
-        ],
-        help_text="Must match the academic program of the linked Timeline"
+    ACADEMIC_YEAR_CHOICES = (
+        ('2', '2nd Year'),
+        ('3', '3rd Year'),
+        ('4siw', '4th Year SIW'),
+        ('4isi', '4th Year ISI'),
+        ('4iasd', '4th Year IASD'),
+        ('5siw', '5th Year SIW'),
+        ('5isi', '5th Year ISI'),
+        ('5iasd', '5th Year IASD'),
+    )
+    academic_year= models.CharField(
+        max_length=5,
+        choices=ACADEMIC_YEAR_CHOICES,
+        help_text="Academic year for which the theme is proposed"
     )
 
     def clean(self):
@@ -53,7 +49,7 @@ class Theme(AuditableModel):
             raise ValidationError({"co_supervisors": f"These users are not teachers: {invalid_ids}"})
 
     def __str__(self):
-        return f"{self.title} (Year: {self.academic_year}, Program: {self.academic_program})"
+        return f"{self.title} (Year: {self.academic_year},)"
 
 
 
