@@ -5,7 +5,7 @@ from common.models import TimeStampedModel
 from teams.mixins import TeamRequestStatusMixin
 from teams.models import Team
 from .theme_models import Theme
-
+from users.models.student import Student
 
 class ThemeSupervisionRequest(TeamRequestStatusMixin, TimeStampedModel):
     """
@@ -14,7 +14,7 @@ class ThemeSupervisionRequest(TeamRequestStatusMixin, TimeStampedModel):
     theme = models.ForeignKey(Theme, on_delete=models.CASCADE, related_name='supervision_requests')
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='supervision_requests')
     requester = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
+        Student, 
         on_delete=models.CASCADE, 
         related_name='sent_supervision_requests'
     )
@@ -53,14 +53,14 @@ class ThemeSupervisionRequest(TeamRequestStatusMixin, TimeStampedModel):
         """
         super().clean()
         
-        from teams.models import TeamMembership
+        # from teams.models import TeamMembership
         
-        # Verify requester is a team owner
-        if not self.team.members.filter(
-            teammembership__user=self.requester,
-            teammembership__role=TeamMembership.ROLE_OWNER
-        ).exists():
-            raise ValidationError("Only team owners can request theme supervision.")
+        # # Verify requester is a team owner
+        # if not self.team.members.filter(
+        #     teammembership__user=self.requester,
+        #     teammembership__role=TeamMembership.ROLE_OWNER
+        # ).exists():
+        #     raise ValidationError("Only team owners can request theme supervision.")
         
         # # Verify theme doesn't already have an assigned team
         # if hasattr(self.theme, 'assigned_team'):

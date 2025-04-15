@@ -50,7 +50,7 @@ class CreateSupervisionRequestView(generics.CreateAPIView):
     View to create a new supervision request
     """
     serializer_class = CreateThemeSupervisionRequestSerializer
-    permission_classes = [permissions.IsAuthenticated, IsTeamOwner]
+    permission_classes = [permissions.IsAuthenticated, IsTeamMember]
     
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

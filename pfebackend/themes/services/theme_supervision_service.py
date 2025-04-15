@@ -40,8 +40,8 @@ class ThemeSupervisionService:
                     role=TeamMembership.ROLE_OWNER
                 ).exists()
                 
-                if not is_owner:
-                    raise ValidationError("Only team owners can request theme supervision.")
+                # if not is_owner:
+                #     raise ValidationError("Only team owners can request theme supervision.")
                 
                 # Set default invitee to theme proposer if not provided
                 if invitee is None:
