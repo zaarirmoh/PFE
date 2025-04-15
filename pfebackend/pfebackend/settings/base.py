@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'common',
     'themes',
     # 'django_seed'
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -190,6 +191,22 @@ SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,
     'JSON_EDITOR': True,
 }
+
+
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+
+#for myenv
+# CELERY_BROKER_URL = 'redis://:my_password@localhost:6379/0'
+# CELERY_RESULT_BACKEND = 'redis://:my_password@localhost:6379/0'
+#ta3 docker
+CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_RESULT_BACKEND = "redis://redis:6379/1"
+
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
 
 
 STATIC_URL = '/static/'

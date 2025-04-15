@@ -30,6 +30,7 @@ class Migration(migrations.Migration):
                 ('profile_picture_url', models.URLField(blank=True, default='https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png', help_text="URL of the user's profile picture", max_length=500, null=True)),
                 ('country', django_countries.fields.CountryField(default='DZ', max_length=2)),
                 ('state', models.CharField(blank=True, max_length=100, null=True)),
+                ('municipality', models.CharField(blank=True, max_length=100, null=True)),
                 ('phone_number', phonenumber_field.modelfields.PhoneNumberField(blank=True, help_text='Enter a valid phone number with country code', max_length=128, null=True, region=None, unique=True)),
                 ('year_of_birth', models.PositiveSmallIntegerField(blank=True, null=True, validators=[django.core.validators.RegexValidator(message='Year must be between 1900 and 2099', regex='^(19\\d{2}|20\\d{2})$')])),
                 ('is_active', models.BooleanField(default=True)),

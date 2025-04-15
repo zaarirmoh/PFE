@@ -54,7 +54,6 @@ class ThemeSupervisionRequest(TeamRequestStatusMixin, TimeStampedModel):
         super().clean()
         
         from teams.models import TeamMembership
-        from themes.models import ThemeAssignment
         
         # Verify requester is a team owner
         if not self.team.members.filter(
