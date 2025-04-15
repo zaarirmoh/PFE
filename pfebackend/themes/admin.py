@@ -5,17 +5,17 @@ from .models.theme_models import Theme
 
 @admin.register(Theme)
 class ThemeAdmin(ModelAdmin):
-    list_display = ('title', 'proposed_by', 'academic_year', 'academic_program', 'specialty', 'document_preview', 'created_at')
-    list_filter = ('academic_year', 'academic_program', 'specialty', 'created_at')
+    list_display = ('title', 'proposed_by', 'academic_year', 'document_preview', 'created_at')
+    list_filter = ('academic_year', 'created_at')
     search_fields = ('title', 'proposed_by__email')
     readonly_fields = ('created_at', 'updated_at', 'document_preview')
 
     fieldsets = (
         ('Theme Details', {
-            'fields': ('title', 'proposed_by', 'co_supervisors', 'specialty', 'description', 'tools')
+            'fields': ('title', 'proposed_by', 'co_supervisors', 'description', 'tools')
         }),
         ('Academic Information', {
-            'fields': ('academic_year', 'academic_program')
+            'fields': ['academic_year']
         }),
         ('Documents', {
             'fields': ('documents', 'document_preview'),

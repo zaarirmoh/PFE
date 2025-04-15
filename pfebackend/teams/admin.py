@@ -119,6 +119,9 @@ class TeamSettingsAdmin(ModelAdmin):
         obj.updated_by = request.user
         super().save_model(request, obj, form, change)
 
-admin.site.register(Team, TeamAdmin)
+
+admin.site.register(Team)
+
+# admin.site.register(Team, TeamAdmin)
 admin.site.register(TeamSettings, TeamSettingsAdmin)
 # admin.site.register(TeamMembership)
