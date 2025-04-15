@@ -21,7 +21,7 @@ class TeamMembershipListView(ListAPIView):
     GET /api/teams/{team_id}/members/
     """
     serializer_class = TeamMembershipSerializer
-    permission_classes = [permissions.IsAuthenticated, IsTeamMember]
+    permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
         """Return memberships for the specified team"""
