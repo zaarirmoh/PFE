@@ -51,55 +51,49 @@ from documents.serializers import DocumentSerializer
 from users.models import User
 from users.serializers import CustomUserSerializer
 
-class ThemeSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Theme model.
-    """
-    documents = DocumentSerializer(many=True, read_only=True)
-
-    # Accept document IDs for write
+class ThemeInputSerializer(serializers.ModelSerializer):
     document_ids = serializers.PrimaryKeyRelatedField(
         queryset=Document.objects.all(), many=True, write_only=True, required=False
     )
-
-    # Accept co-supervisor IDs for write
-    co_supervisors = serializers.PrimaryKeyRelatedField(
+    co_supervisor_ids = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.filter(user_type="teacher"), many=True, write_only=True, required=False
     )
 
-    # Return co-supervisor full objects for read (same field name)
-    co_supervisors = CustomUserSerializer(many=True, read_only=True)
+    class Meta:
+        model = Theme
+        exclude = ['documents', 'co_supervisors', 'proposed_by']
 
-    # proposed_by: override to return full user info instead of just ID
+    def validate(self, data):
+        request = self.context.get("request")
+        if request and request.user.user_type != "teacher":
+            raise serializers.ValidationError("Only teachers can propose themes.")
+        data["proposed_by"] = request.user
+        return data
+
+    def create(self, validated_data):
+        co_supervisors = validated_data.pop('co_supervisor_ids', [])
+        documents = validated_data.pop('document_ids', [])
+        theme = Theme.objects.create(**validated_data)
+        theme.co_supervisors.set(co_supervisors)
+        theme.documents.set(documents)
+        return theme
+
+    def update(self, instance, validated_data):
+        co_supervisors = validated_data.pop('co_supervisor_ids', None)
+        documents = validated_data.pop('document_ids', None)
+        instance = super().update(instance, validated_data)
+        if co_supervisors is not None:
+            instance.co_supervisors.set(co_supervisors)
+        if documents is not None:
+            instance.documents.set(documents)
+        return instance
+
+
+class ThemeOutputSerializer(serializers.ModelSerializer):
+    documents = DocumentSerializer(many=True, read_only=True)
+    co_supervisors = CustomUserSerializer(many=True, read_only=True)
     proposed_by = CustomUserSerializer(read_only=True)
 
     class Meta:
         model = Theme
         fields = '__all__'
-        read_only_fields = ["proposed_by"]
-
-    def validate(self, data):
-        """
-        Ensure the requesting user is a teacher before assigning them as `proposed_by`.
-        """
-        request = self.context.get("request")
-        if request and request.user:
-            if request.user.user_type != "teacher":
-                raise serializers.ValidationError("Only teachers can propose themes.")
-            data["proposed_by"] = request.user
-        return data
-
-    def create(self, validated_data):
-        """
-        Override create to handle Many-to-Many relationships properly.
-        """
-        co_supervisors = validated_data.pop('co_supervisors', [])
-        document_ids = validated_data.pop('document_ids', [])
-        theme = Theme.objects.create(**validated_data)
-        theme.co_supervisors.set(co_supervisors)
-        theme.documents.set(document_ids)
-
-        return theme
-
-
-

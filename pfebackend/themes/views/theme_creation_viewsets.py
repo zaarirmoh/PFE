@@ -3,7 +3,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from themes.models.theme_models import Theme
-from themes.serializers.theme_creation_serializers import ThemeSerializer
+from themes.serializers.theme_creation_serializers import ThemeInputSerializer, ThemeOutputSerializer
 from users.permissions import IsTeacher
 from common.pagination import StaticPagination
 
@@ -25,7 +25,7 @@ class ThemeViewSet(viewsets.ModelViewSet):
         - `proposed_by` (int) - Filter by teacher who proposed the theme.
     """
     queryset = Theme.objects.all().order_by("-created_at")
-    serializer_class = ThemeSerializer
+
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StaticPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -38,6 +38,11 @@ class ThemeViewSet(viewsets.ModelViewSet):
         if self.action in ["create", "update", "partial_update", "destroy"]:
             return [permissions.IsAuthenticated(), IsTeacher()]
         return [permissions.IsAuthenticated()]
+    
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return ThemeInputSerializer
+        return ThemeOutputSerializer  
 
     def get_serializer_context(self):
         """
@@ -78,7 +83,7 @@ class ThemeViewSet(viewsets.ModelViewSet):
                 enum=["created_at", "title"]
             ),
         ],
-        responses={200: ThemeSerializer(many=True)}
+        responses={200: ThemeOutputSerializer(many=True)}
     )
     def list(self, request, *args, **kwargs):
         """ Retrieve a list of themes with filtering, searching, and ordering. """
@@ -86,7 +91,7 @@ class ThemeViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         operation_description="Retrieve details of a specific theme.",
-        responses={200: ThemeSerializer()}
+        responses={200: ThemeOutputSerializer()}
     )
     def retrieve(self, request, *args, **kwargs):
         """ Retrieve details of a specific theme. """
@@ -114,7 +119,7 @@ class ThemeViewSet(viewsets.ModelViewSet):
                 "academic_year": openapi.Schema(type=openapi.TYPE_STRING, description="Academic year of the theme"),
             }
         ),
-        responses={201: ThemeSerializer()}
+        responses={201: ThemeOutputSerializer()}
     )
     def create(self, request, *args, **kwargs):
         """ Create a new theme (Teachers only). """
@@ -122,8 +127,8 @@ class ThemeViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         operation_description="Update an existing theme. Only teachers can update themes.",
-        request_body=ThemeSerializer,
-        responses={200: ThemeSerializer()}
+        request_body=ThemeInputSerializer,
+        responses={200: ThemeOutputSerializer()}
     )
     def update(self, request, *args, **kwargs):
         """ Update an existing theme (Teachers only). """
@@ -131,8 +136,8 @@ class ThemeViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         operation_description="Partially update a theme. Only teachers can update themes.",
-        request_body=ThemeSerializer,
-        responses={200: ThemeSerializer()}
+        request_body=ThemeInputSerializer,
+        responses={200: ThemeOutputSerializer()}
     )
     def partial_update(self, request, *args, **kwargs):
         """ Partially update a theme (Teachers only). """
