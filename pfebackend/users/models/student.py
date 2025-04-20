@@ -37,6 +37,9 @@ class Student(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
     
+    def get_full_name(self):
+        return self.user.get_full_name()
+    
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.matricule}"
     

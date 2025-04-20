@@ -2,14 +2,14 @@ from rest_framework import serializers
 from teams.models import Team
 from users.serializers import StudentSerializer, TeacherSerializer
 from teams.serializers import TeamSerializer
-from themes.serializers import ThemeSerializer
+from themes.serializers import ThemeOutputSerializer
 from themes.models import Theme, ThemeSupervisionRequest
 
 
 
 
 class ThemeSupervisionRequestSerializer(serializers.ModelSerializer):
-    theme = ThemeSerializer(read_only=True)
+    theme = ThemeOutputSerializer(read_only=True)
     team = TeamSerializer(read_only=True)
     requester = StudentSerializer(read_only=True)
     invitee = TeacherSerializer(read_only=True)

@@ -42,7 +42,7 @@ class UserSupervisionRequestListView(generics.ListAPIView):
     pagination_class = StaticPagination
     
     def get_queryset(self):
-        return ThemeSupervisionService.get_user_pending_supervision_requests(self.request.user)
+        return ThemeSupervisionService.get_user_pending_supervision_requests(self.request.user.student)
 
 
 class CreateSupervisionRequestView(generics.CreateAPIView):
@@ -67,7 +67,7 @@ class CreateSupervisionRequestView(generics.CreateAPIView):
             supervision_request = ThemeSupervisionService.create_supervision_request(
                 theme=theme,
                 team=team,
-                requester=request.user,
+                requester=request.user.student,
                 invitee=invitee,  # Pass the invitee to the service
                 message=message
             )

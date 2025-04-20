@@ -36,7 +36,7 @@ class ThemeSupervisionService:
                 # Verify requester is a team owner
                 is_owner = TeamMembership.objects.filter(
                     team=team,
-                    user=requester,
+                    user=requester.user,
                     role=TeamMembership.ROLE_OWNER
                 ).exists()
                 
@@ -75,7 +75,7 @@ class ThemeSupervisionService:
                 from notifications.services import NotificationService
                 
                 # Format requester name and team name
-                requester_name = requester.get_full_name() or requester.username
+                requester_name = requester.user.get_full_name() or requester.user.username
                 team_name = escape(team.name)
                 theme_title = escape(theme.title)
                 
@@ -94,8 +94,8 @@ class ThemeSupervisionService:
                     'team_id': team.id,
                     'team_name': team.name,
                     'requester': {
-                        'id': requester.id,
-                        'username': requester.username,
+                        'id': requester.user.id,
+                        'username': requester.user.username,
                         'name': requester_name
                     }
                 }
@@ -162,7 +162,7 @@ class ThemeSupervisionService:
             
             theme = supervision_request.theme
             team = supervision_request.team
-            requester = supervision_request.requester
+            requester = supervision_request.requester.user
             
             # Verify user is the theme proposer or a co-supervisor
             is_proposer = theme.proposed_by == user
