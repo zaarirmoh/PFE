@@ -8,6 +8,10 @@ class IsTeacher(BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.user_type == 'teacher'
     
+class IsExternalUser(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.user_type == 'external_user'
+    
 class IsAdministrator(BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.user_type == 'administrator'

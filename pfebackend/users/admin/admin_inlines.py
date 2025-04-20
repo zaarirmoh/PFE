@@ -1,5 +1,5 @@
 from django.contrib import admin
-from users.models import Student, Teacher, Administrator
+from users.models import Student, Teacher, Administrator, ExternalUser
 from unfold import admin as UnfoldAdmin
 
 class StudentProfileInline(UnfoldAdmin.StackedInline):
@@ -16,6 +16,12 @@ class TeacherProfileInline(UnfoldAdmin.StackedInline):
     verbose_name_plural = "Teacher Profile"
     tab = True
 
+class ExternalUserProfileInline(UnfoldAdmin.StackedInline):
+    model = ExternalUser
+    can_delete = False
+    verbose_name = "External User Profile"
+    verbose_name_plural = "External User Profile"
+    tab = True
 
 class AdministratorProfileInline(UnfoldAdmin.StackedInline):
     model = Administrator

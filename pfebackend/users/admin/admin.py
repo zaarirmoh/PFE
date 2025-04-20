@@ -11,7 +11,8 @@ from .admin_forms import CustomUserChangeForm, CustomUserCreationForm
 from .admin_inlines import (
     StudentProfileInline,
     TeacherProfileInline,
-    AdministratorProfileInline
+    AdministratorProfileInline,
+    ExternalUserProfileInline,
 )
 from users.models import User, Student
 from users.serializers.base import BaseProfileSerializer
@@ -24,6 +25,7 @@ USER_TYPE_INLINES = {
     'student': StudentProfileInline,
     'teacher': TeacherProfileInline,
     'administrator': AdministratorProfileInline,
+    'external_user': ExternalUserProfileInline,
 }
 
 class CustomUserAdmin(BaseUserAdmin, ModelAdmin):

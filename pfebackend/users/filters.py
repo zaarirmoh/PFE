@@ -71,3 +71,9 @@ class TeacherFilter(filters.FilterSet):
     class Meta:
         model = User
         fields = ['department', 'grade']
+        
+class ExternalUserFilter(filters.FilterSet):
+    external_user_type = filters.CharFilter(field_name="external_user__external_user_type")
+    class Meta:
+        model = User
+        fields = ['external_user_type']

@@ -8,7 +8,7 @@ from users.serializers.user import CustomUserSerializer
 from common.pagination import StaticPagination
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
-from .filters import StudentFilter, TeacherFilter
+from .filters import StudentFilter, TeacherFilter, ExternalUserFilter
 from documents.models import DocumentType
 from documents.serializers import DocumentSerializer
 
@@ -136,6 +136,45 @@ class TeacherListView(BaseUserListView):
         the related teacher profile in the same query.
         """
         return User.objects.filter(user_type='teacher').select_related('teacher')
+    
+class ExternalUserListView(BaseUserListView):
+    """
+    API endpoint to retrieve and filter external users.
+    
+    ## Endpoint
+    GET /api/users/external_users/ - List external users with filtering options
+    
+    ## Query Parameters
+    - ExternalUser-specific filters:
+        - `external_user_type` - Filter by teacher grade (e.g., 'professeur', 'maitre_assistant_a')
+    
+    - Searching:
+        - `search` - Search in first name, last name, email, and username
+    
+    - Sorting:
+        - `ordering` - Sort by field (prefix with - for descending)
+          Examples: ordering=last_name, ordering=-email
+          Available fields: last_name, first_name, email
+    
+    - Pagination:
+        - `page` - Page number
+        - `page_size` - Number of results per page
+    
+    ## Authentication
+    - User must be authenticated to access this endpoint
+    """
+    filterset_class = ExternalUserFilter
+    search_fields = ['first_name', 'last_name', 'email', 'username']
+    ordering_fields = ['last_name', 'first_name', 'email', 'external_user__external_user_type']
+    
+    def get_queryset(self):
+        """
+        Return queryset of all teacher users with their teacher profile loaded.
+        
+        Uses select_related to optimize database queries by fetching
+        the related teacher profile in the same query.
+        """
+        return User.objects.filter(user_type='external_user').select_related('external_user')
     
 class ProfilePictureUpdateView(generics.CreateAPIView):
     """

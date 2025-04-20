@@ -2,7 +2,7 @@ import random
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from faker import Faker
-from users.models import Student, Teacher, Administrator, StudentSkill
+from users.models import Student, Teacher, Administrator, StudentSkill, ExternalUser
 
 User = get_user_model()
 
@@ -13,6 +13,7 @@ class Command(BaseCommand):
         parser.add_argument('--students', type=int, default=10, help='Number of students to create')
         parser.add_argument('--teachers', type=int, default=10, help='Number of teachers to create')
         parser.add_argument('--admins', type=int, default=3, help='Number of administrators to create')
+        parser.add_argument('--externals', type=int, default=5, help='Number of external users to create')
         parser.add_argument('--password', type=str, default='zaarirmoh', help='Password for all created users')
 
     def handle(self, *args, **kwargs):
@@ -22,6 +23,7 @@ class Command(BaseCommand):
         num_students = kwargs.get('students', 10)
         num_teachers = kwargs.get('teachers', 10)
         num_admins = kwargs.get('admins', 3)
+        num_externals = kwargs.get('externals', 5)
         password = kwargs.get('password', 'zaarirmoh')
         
         self.stdout.write('Creating random users...')
@@ -139,8 +141,37 @@ class Command(BaseCommand):
                     'Department Head'
                 ])
             )
+            
+        # Create external users
+        self.stdout.write(f'Creating {num_externals} external users...')
+        for i in range(num_externals):
+            # Create user
+            first_name = fake.first_name()
+            last_name = fake.last_name()
+            email = f"external{i+1}@example.com"
+            username = f"external{i+1}"
+            
+            user = User.objects.create_user(
+                email=email,
+                username=username,
+                first_name=first_name,
+                last_name=last_name,
+                password=password,
+                user_type='external'
+            )
+            
+            # Create external user profile
+            ExternalUser.objects.create(
+                user=user,
+                EXTERNAL_USER_TYPE=random.choice([
+                    ExternalUser.UNIVERSITY,
+                    ExternalUser.COMPANY,
+                    ExternalUser.OTHER
+                ])
+            )
         
         self.stdout.write(self.style.SUCCESS('Successfully created random users:'))
         self.stdout.write(f'- {num_students} students (password: {password})')
         self.stdout.write(f'- {num_teachers} teachers (password: {password})')
         self.stdout.write(f'- {num_admins} administrators (password: {password})')
+        self.stdout.write(f'- {num_externals} external users (password: {password})')
