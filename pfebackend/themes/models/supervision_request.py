@@ -67,10 +67,15 @@ class ThemeSupervisionRequest(TeamRequestStatusMixin, TimeStampedModel):
         #     raise ValidationError(f"This theme is already assigned to another team.")
         
         # Verify team doesn't already have an assigned theme
-        if hasattr(self.team, 'assigned_theme'):
-            raise ValidationError(f"Your team already has an assigned theme.")
+        # if hasattr(self.team, 'assigned_theme'):
+        #     raise ValidationError(f"Your team already has an assigned theme.")
         
         # Verify team's academic constraints match the theme's
+        
+        # from themes.models import ThemeAssignment
+        # if ThemeAssignment.objects.filter(team=self.team).exists():
+        #     raise ValidationError(f"Your team already has an assigned theme.")
+    
         if self.team.academic_year != str(self.theme.academic_year):
             raise ValidationError(
                 f"Your team's academic year ({self.team.academic_year}) doesn't match "

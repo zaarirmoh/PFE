@@ -42,7 +42,9 @@ class ThemeAssignment(TimeStampedModel):
     Represents the final assignment of a theme to a team.
     """
     team = models.OneToOneField('teams.Team', on_delete=models.CASCADE, related_name='assigned_theme')
-    theme = models.OneToOneField(Theme, on_delete=models.CASCADE, related_name='assigned_team')
+    # theme = models.OneToOneField(Theme, on_delete=models.CASCADE, related_name='assigned_team')
+    theme = models.ForeignKey(Theme, on_delete=models.CASCADE, related_name='assigned_teams')
+
     assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='theme_assignments')
 
     def __str__(self):
@@ -51,5 +53,5 @@ class ThemeAssignment(TimeStampedModel):
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['team'], name='unique_team_assignment'),
-            models.UniqueConstraint(fields=['theme'], name='unique_theme_assignment')
+            # models.UniqueConstraint(fields=['theme'], name='unique_theme_assignment')
         ]

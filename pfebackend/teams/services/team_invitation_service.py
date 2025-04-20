@@ -47,11 +47,11 @@ class TeamInvitationService:
                 
                 # Format inviter name
                 inviter_name = inviter.get_full_name() or inviter.username
-                team_name = escape(team.name)
+                # team_name = escape(team.name)
                 
                 # Create better formatted invitation content
-                title = f"Team Invitation: {team_name}"
-                content = f"{inviter_name} has invited you to join the team '{team_name}'"
+                title = f"Team Invitation: {team.id}"
+                content = f"{inviter_name} has invited you to join Team '{team.id}'"
                 
                 if message:
                     content += f"\n\nMessage: {message}"
@@ -60,7 +60,7 @@ class TeamInvitationService:
                 metadata = {
                     'invitation_id': invitation.id,
                     'team_id': team.id,
-                    'team_name': team.name,
+                    # 'team_name': team.name,
                     'inviter': {
                         'id': inviter.id,
                         'username': inviter.username,
@@ -133,7 +133,7 @@ class TeamInvitationService:
                         NotificationService.create_and_send(
                             recipient=inviter,
                             title=f"Invitation Accepted",
-                            content=f"{member_name} has accepted your invitation to join '{team.name}'",
+                            content=f"{member_name} has accepted your invitation to join Team '{team.id}'",
                             notification_type='team_membership',
                             related_object=team,
                             action_url=f"/teams/{team.id}/members/",
@@ -167,7 +167,7 @@ class TeamInvitationService:
                     NotificationService.create_and_send(
                         recipient=inviter,
                         title=f"Invitation Declined",
-                        content=f"{member_name} has declined your invitation to join '{team.name}'",
+                        content=f"{member_name} has declined your invitation to join Team '{team.id}'",
                         notification_type='team_update',
                         related_object=team,
                         priority='low',
@@ -261,7 +261,7 @@ class TeamInvitationService:
             NotificationService.create_and_send(
                 recipient=invitation.invitee,
                 title="Invitation Cancelled",
-                content=f"Your invitation to join '{invitation.team.name}' has been cancelled",
+                content=f"Your invitation to join 'Team {invitation.team.id}' has been cancelled",
                 notification_type='team_update',
                 related_object=invitation.team,
                 priority='low',
