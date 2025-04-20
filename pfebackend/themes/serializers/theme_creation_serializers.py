@@ -65,8 +65,8 @@ class ThemeInputSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         request = self.context.get("request")
-        if request and request.user.user_type != "teacher":
-            raise serializers.ValidationError("Only teachers can propose themes.")
+        # if request and request.user.user_type != "teacher":
+        #     raise serializers.ValidationError("Only teachers can propose themes.")
         data["proposed_by"] = request.user
         return data
 

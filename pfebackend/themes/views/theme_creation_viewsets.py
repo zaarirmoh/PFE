@@ -4,7 +4,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from themes.models.theme_models import Theme
 from themes.serializers.theme_creation_serializers import ThemeInputSerializer, ThemeOutputSerializer
-from users.permissions import IsTeacher
+from users.permissions import IsTeacher, IsExternalUser
 from common.pagination import StaticPagination
 
 class ThemeViewSet(viewsets.ModelViewSet):
@@ -36,7 +36,7 @@ class ThemeViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         """ Allow only teachers to create, update, or delete themes. """
         if self.action in ["create", "update", "partial_update", "destroy"]:
-            return [permissions.IsAuthenticated(), IsTeacher()]
+            return [permissions.IsAuthenticated(), IsTeacher(), IsExternalUser()]
         return [permissions.IsAuthenticated()]
     
     def get_serializer_class(self):
