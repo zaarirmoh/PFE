@@ -112,10 +112,11 @@ class TeamInvitation(TeamRequestStatusMixin, TimeStampedModel):
             role=TeamMembership.ROLE_MEMBER
         )
         
-        # Update invitation status
-        self.status = self.STATUS_ACCEPTED
-        self.save()
-        
+        # # Update invitation status
+        # self.status = self.STATUS_ACCEPTED
+        # self.save()
+        TeamInvitation.objects.filter(pk=self.pk).update(status=self.STATUS_ACCEPTED)
+        self.refresh_from_db()
         return True
     
     def decline(self):

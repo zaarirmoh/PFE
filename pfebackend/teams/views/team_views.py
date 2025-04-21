@@ -112,7 +112,7 @@ class TeamDetailView(RetrieveUpdateDestroyAPIView):
     """
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
-    permission_classes = [permissions.IsAuthenticated, IsTeamMember]
+    permission_classes = [permissions.IsAuthenticated]
     lookup_field = 'id'
 
     def get_permissions(self):

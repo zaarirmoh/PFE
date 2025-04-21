@@ -104,9 +104,11 @@ class TeamJoinRequest(TeamRequestStatusMixin, TimeStampedModel):
             role=TeamMembership.ROLE_MEMBER
         )
         
-        # Update request status
-        self.status = self.STATUS_ACCEPTED
-        self.save()
+        # # Update request status
+        # self.status = self.STATUS_ACCEPTED
+        # self.save()
+        TeamJoinRequest.objects.filter(pk=self.pk).update(status=self.STATUS_ACCEPTED)
+        self.refresh_from_db()
         
         return True
     

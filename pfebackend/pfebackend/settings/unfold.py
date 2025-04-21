@@ -229,6 +229,11 @@ UNFOLD = {
                     "link": lambda request: f"{reverse_lazy('admin:users_user_changelist')}?user_type__exact=teacher",
                 },
                 {
+                    "title": _("Externals"),
+                    # "icon": "sports_motorsports",
+                    "link": lambda request: f"{reverse_lazy('admin:users_user_changelist')}?user_type__exact=external",
+                },
+                {
                     "title": _("Students"),
                     # "icon": "sports_motorsports",
                     "link": lambda request: f"{reverse_lazy('admin:users_user_changelist')}?user_type__exact=student",
