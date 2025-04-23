@@ -5,7 +5,7 @@ from common.models import TimeStampedModel
 from teams.mixins import TeamRequestStatusMixin
 from teams.models import Team
 from .theme_models import Theme
-from users.models.student import Student
+from users.models import Student, User
 
 class ThemeSupervisionRequest(TeamRequestStatusMixin, TimeStampedModel):
     """
@@ -14,7 +14,7 @@ class ThemeSupervisionRequest(TeamRequestStatusMixin, TimeStampedModel):
     theme = models.ForeignKey(Theme, on_delete=models.CASCADE, related_name='supervision_requests')
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='supervision_requests')
     requester = models.ForeignKey(
-        Student, 
+        settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 
         related_name='sent_supervision_requests'
     )
