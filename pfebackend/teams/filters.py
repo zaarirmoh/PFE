@@ -77,6 +77,8 @@ class TeamFilter(filters.FilterSet):
             return queryset.filter(academic_year=student.current_year)
         return queryset
     
+    
+    
     def filter_min_members(self, queryset, name, value):
         """Filter for teams with at least this many members"""
         return queryset.annotate(member_count=Count('members')).filter(member_count__gte=value)

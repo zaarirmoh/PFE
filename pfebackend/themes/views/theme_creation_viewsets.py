@@ -6,6 +6,7 @@ from themes.models.theme_models import Theme
 from themes.serializers.theme_creation_serializers import ThemeInputSerializer, ThemeOutputSerializer
 from users.permissions import IsTeacher, IsExternalUser
 from common.pagination import StaticPagination
+from themes.filters import ThemeFilter
 
 class ThemeViewSet(viewsets.ModelViewSet):
     """
@@ -19,17 +20,23 @@ class ThemeViewSet(viewsets.ModelViewSet):
         - `destroy` (DELETE) - Delete a theme (Teachers only).
 
     Filters:
-        - `academic_year` (int) - Filter by academic year.
-        - `academic_program` (str) - Filter by academic program (`preparatory` / `superior`).
-        - `specialty` (str) - Filter by specialty (`IASD`, `SIW`, `ISI`, `3CS`, `2CPI`).
-        - `proposed_by` (int) - Filter by teacher who proposed the theme.
+        - `title` (str) - Filter by title (case-insensitive, partial match).
+        - `description` (str) - Filter by description (case-insensitive, partial match).  
+        - `academic_year` (str) - Filter by academic year.
+        - `proposed_by` (int) - Filter by teacher ID who proposed the theme.
+        - `co_supervised_by` (int) - Filter by co-supervisor ID.
+        - `team_id` (int) - Filter by team ID to get themes assigned to that team.
+        - `is_member` (bool) - For students: filter to show only themes assigned to teams they are members of.
+        - `is_supervisor` (bool) - For teachers: filter to show only themes they propose or co-supervise.
+        - `is_assigned` (bool) - Filter to show only themes that are assigned to any team.
+        - `created_after`, `created_before`, `updated_after`, `updated_before` (datetime) - Filter by creation/update date.
     """
     queryset = Theme.objects.all().order_by("-created_at")
 
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StaticPagination
+    filterset_class = ThemeFilter
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ["academic_year", "proposed_by"]
     search_fields = ["title", "description"]
     ordering_fields = ["created_at", "title"]
 
@@ -56,22 +63,48 @@ class ThemeViewSet(viewsets.ModelViewSet):
         operation_description="Retrieve a list of themes with filtering, searching, and ordering.",
         manual_parameters=[
             openapi.Parameter(
+                "title", openapi.IN_QUERY, description="Filter by title (case-insensitive, partial match)",
+                type=openapi.TYPE_STRING
+            ),
+            openapi.Parameter(
+                "description", openapi.IN_QUERY, description="Filter by description (case-insensitive, partial match)",
+                type=openapi.TYPE_STRING
+            ),
+            openapi.Parameter(
                 "academic_year", openapi.IN_QUERY, description="Filter by academic year",
-                type=openapi.TYPE_INTEGER
-            ),
-            openapi.Parameter(
-                "academic_program", openapi.IN_QUERY, description="Filter by academic program",
-                type=openapi.TYPE_STRING,
-                enum=["preparatory", "superior"]
-            ),
-            openapi.Parameter(
-                "specialty", openapi.IN_QUERY, description="Filter by specialty",
-                type=openapi.TYPE_STRING,
-                enum=["IASD", "SIW", "ISI", "3CS", "2CPI"]
+                type=openapi.TYPE_STRING
             ),
             openapi.Parameter(
                 "proposed_by", openapi.IN_QUERY, description="Filter by teacher ID who proposed the theme",
                 type=openapi.TYPE_INTEGER
+            ),
+            openapi.Parameter(
+                "co_supervised_by", openapi.IN_QUERY, description="Filter by co-supervisor ID",
+                type=openapi.TYPE_INTEGER
+            ),
+            openapi.Parameter(
+                "team_id", openapi.IN_QUERY, description="Filter by team ID to get themes assigned to that team",
+                type=openapi.TYPE_INTEGER
+            ),
+            openapi.Parameter(
+                "is_member", openapi.IN_QUERY, description="For students: filter to show only themes assigned to teams they are members of",
+                type=openapi.TYPE_BOOLEAN
+            ),
+            openapi.Parameter(
+                "is_supervisor", openapi.IN_QUERY, description="For teachers: filter to show only themes they propose or co-supervise",
+                type=openapi.TYPE_BOOLEAN
+            ),
+            openapi.Parameter(
+                "is_assigned", openapi.IN_QUERY, description="Filter to show only themes that are assigned to any team",
+                type=openapi.TYPE_BOOLEAN
+            ),
+            openapi.Parameter(
+                "created_after", openapi.IN_QUERY, description="Filter themes created after this datetime",
+                type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME
+            ),
+            openapi.Parameter(
+                "created_before", openapi.IN_QUERY, description="Filter themes created before this datetime",
+                type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME
             ),
             openapi.Parameter(
                 "search", openapi.IN_QUERY, description="Search themes by title or description",
@@ -80,7 +113,7 @@ class ThemeViewSet(viewsets.ModelViewSet):
             openapi.Parameter(
                 "ordering", openapi.IN_QUERY, description="Order results by `created_at` or `title`",
                 type=openapi.TYPE_STRING,
-                enum=["created_at", "title"]
+                enum=["created_at", "-created_at", "title", "-title"]
             ),
         ],
         responses={200: ThemeOutputSerializer(many=True)}
@@ -99,26 +132,7 @@ class ThemeViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         operation_description="Create a new theme. Only teachers can create themes.",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            required=["title", "specialty", "description", "tools", "academic_year", "academic_program"],
-            properties={
-                "title": openapi.Schema(type=openapi.TYPE_STRING, description="Title of the theme"),
-                "co_supervisors": openapi.Schema(
-                    type=openapi.TYPE_ARRAY,
-                    items=openapi.Items(type=openapi.TYPE_INTEGER),
-                    description="List of co-supervising teachers"
-                ),
-                "description": openapi.Schema(type=openapi.TYPE_STRING, description="Detailed description"),
-                "tools": openapi.Schema(type=openapi.TYPE_STRING, description="Comma-separated list of tools used"),
-                "documents": openapi.Schema(
-                    type=openapi.TYPE_ARRAY,
-                    items=openapi.Items(type=openapi.TYPE_INTEGER),
-                    description="List of document IDs associated with the theme"
-                ),
-                "academic_year": openapi.Schema(type=openapi.TYPE_STRING, description="Academic year of the theme"),
-            }
-        ),
+        request_body=ThemeInputSerializer,
         responses={201: ThemeOutputSerializer()}
     )
     def create(self, request, *args, **kwargs):

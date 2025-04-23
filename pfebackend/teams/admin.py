@@ -41,8 +41,7 @@ class TeamAdmin(ModelAdmin):
     ordering = ('academic_year', '-created_at')
     
     # Only is_verified can be edited
-    readonly_fields = ('description', 'academic_year', 
-                      'maximum_members', 'created_at', 
+    readonly_fields = ( 'created_at', 
                       'updated_at', 'created_by', 'updated_by')
     
     # Display team memberships inline
@@ -50,7 +49,7 @@ class TeamAdmin(ModelAdmin):
     
     fieldsets = (
         ('Team info', {
-            'fields': ('description',)
+            'fields': ('description','name')
         }),
         ('Academic info', {
             'fields': ('academic_year', 'maximum_members'),

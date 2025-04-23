@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'themes',
     # 'django_seed'
     'django_celery_beat',
+    'supervision',
 ]
 
 MIDDLEWARE = [
