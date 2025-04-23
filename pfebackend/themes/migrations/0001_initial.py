@@ -14,6 +14,7 @@ class Migration(migrations.Migration):
         ('documents', '0001_initial'),
         ('teams', '0001_initial'),
         ('users', '0001_initial'),
+        ('users', '0002_remove_user_municipality_alter_user_user_type_and_more'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -39,34 +40,18 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='ThemeChoice',
+            name='ThemeAssignment',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation Date')),
                 ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Last Update Date')),
-                ('submission_date', models.DateTimeField(auto_now_add=True)),
-                ('is_final', models.BooleanField(default=False, help_text='Whether this choice list is finalized')),
-                ('created_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='%(class)s_created', to=settings.AUTH_USER_MODEL, verbose_name='Created by')),
-                ('team', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='theme_choice', to='teams.team')),
-                ('updated_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='%(class)s_updated', to=settings.AUTH_USER_MODEL, verbose_name='Updated by')),
-            ],
-        ),
-        migrations.CreateModel(
-            name='ThemeRanking',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('rank', models.PositiveSmallIntegerField(help_text='1 is highest priority')),
-                ('theme', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='themes.theme')),
-                ('theme_choice', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='themes.themechoice')),
+                ('assigned_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='theme_assignments', to=settings.AUTH_USER_MODEL)),
+                ('team', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='assigned_theme', to='teams.team')),
+                ('theme', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='assigned_teams', to='themes.theme')),
             ],
             options={
-                'ordering': ['rank'],
+                'constraints': [models.UniqueConstraint(fields=('team',), name='unique_team_assignment')],
             },
-        ),
-        migrations.AddField(
-            model_name='themechoice',
-            name='choices',
-            field=models.ManyToManyField(through='themes.ThemeRanking', to='themes.theme'),
         ),
         migrations.CreateModel(
             name='ThemeSupervisionRequest',
@@ -82,36 +67,9 @@ class Migration(migrations.Migration):
                 ('team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='supervision_requests', to='teams.team')),
                 ('theme', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='supervision_requests', to='themes.theme')),
             ],
-            bases=(teams.mixins.TeamRequestStatusMixin, models.Model),
-        ),
-        migrations.CreateModel(
-            name='ThemeAssignment',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Creation Date')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Last Update Date')),
-                ('assigned_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='theme_assignments', to=settings.AUTH_USER_MODEL)),
-                ('team', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='assigned_theme', to='teams.team')),
-                ('theme', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='assigned_team', to='themes.theme')),
-            ],
             options={
-                'constraints': [models.UniqueConstraint(fields=('team',), name='unique_team_assignment'), models.UniqueConstraint(fields=('theme',), name='unique_theme_assignment')],
+                'constraints': [models.UniqueConstraint(condition=models.Q(('status__in', ['PENDING', 'ACCEPTED'])), fields=('team', 'theme'), name='unique_active_supervision_request')],
             },
-        ),
-        migrations.AddConstraint(
-            model_name='themeranking',
-            constraint=models.UniqueConstraint(fields=('theme_choice', 'theme'), name='unique_theme_in_choice'),
-        ),
-        migrations.AddConstraint(
-            model_name='themeranking',
-            constraint=models.UniqueConstraint(fields=('theme_choice', 'rank'), name='unique_rank_in_choice'),
-        ),
-        migrations.AddConstraint(
-            model_name='themechoice',
-            constraint=models.UniqueConstraint(fields=('team',), name='unique_team_theme_choice'),
-        ),
-        migrations.AddConstraint(
-            model_name='themesupervisionrequest',
-            constraint=models.UniqueConstraint(condition=models.Q(('status__in', ['PENDING', 'ACCEPTED'])), fields=('team', 'theme'), name='unique_active_supervision_request'),
+            bases=(teams.mixins.TeamRequestStatusMixin, models.Model),
         ),
     ]
