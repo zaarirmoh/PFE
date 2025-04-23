@@ -1,6 +1,6 @@
 from django.urls import path, include, re_path
 from rest_framework.routers import DefaultRouter
-from .views import StudentListView, TeacherListView, ProfilePictureUpdateView, ExternalUserListView
+from .views import StudentListView, TeacherListView, ProfilePictureUpdateView, ExternalUserListView, ProfileListView, UserProfileRetrieveView
 
 urlpatterns = [
     
@@ -13,4 +13,9 @@ urlpatterns = [
     path('external-users/', ExternalUserListView.as_view(), name='external-user-list'),
     
     path('auth/reset-profile-picture/', ProfilePictureUpdateView.as_view(), name='profile-picture-update'),
+    
+    path('profiles/', ProfileListView.as_view(), name='profile-list'),
+    path('profiles/<int:id>/', UserProfileRetrieveView.as_view(), name='user-profile'),
+    
+    
 ]
