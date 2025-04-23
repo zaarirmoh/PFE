@@ -9,6 +9,7 @@ from common.pagination import StaticPagination
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from .filters import StudentFilter, TeacherFilter, ExternalUserFilter
+from .serializers import CustomUserSerializer
 from documents.models import DocumentType
 from documents.serializers import DocumentSerializer
 
@@ -222,3 +223,32 @@ class ProfilePictureUpdateView(generics.CreateAPIView):
         request.user.save()
         
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class ProfileListView(generics.ListAPIView):
+    """
+    API view that lists all user profiles.
+    
+    Only authenticated users can access this endpoint.
+    """
+    queryset = User.objects.all()
+    serializer_class = CustomUserSerializer
+    pagination_class = StaticPagination
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['user_type', 'is_active']
+    search_fields = ['first_name', 'last_name', 'email', 'username']
+    ordering_fields = ['last_name', 'first_name', 'email']
+    ordering = ['last_name']
+    permission_classes = [IsAuthenticated]
+
+
+class UserProfileRetrieveView(generics.RetrieveAPIView):
+    """
+    API view that retrieves a specific user profile by ID.
+    
+    Only authenticated users can access this endpoint.
+    """
+    queryset = User.objects.all()
+    serializer_class = CustomUserSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id'
