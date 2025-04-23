@@ -41,10 +41,74 @@ class UserSupervisionRequestListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StaticPagination
     
+    # def get_queryset(self):
+    #     return ThemeSupervisionService.get_user_pending_supervision_requests(self.request.user.student)
     def get_queryset(self):
-        return ThemeSupervisionService.get_user_pending_supervision_requests(self.request.user.student)
+        user = self.request.user
+        
+        # Handle different user types
+        if user.user_type == 'teacher':
+            # For teachers, get requests for themes they supervise
+            return ThemeSupervisionService.get_user_pending_supervision_requests(user)
+        
+        elif user.user_type == 'student':
+            try:
+                # Get teams where student is an owner
+                teams = Team.objects.filter(
+                    members=user,
+                    teammembership__role=TeamMembership.ROLE_OWNER
+                )
+                
+                # Get all requests for these teams
+                all_requests = []
+                for team in teams:
+                    team_requests = ThemeSupervisionService.get_team_supervision_requests(team)
+                    all_requests.extend(team_requests)
+                
+                return ThemeSupervisionRequest.objects.filter(id__in=[req.id for req in all_requests])
+            except:
+                return ThemeSupervisionRequest.objects.none()
+        else:
+            return ThemeSupervisionRequest.objects.none()
 
 
+# class CreateSupervisionRequestView(generics.CreateAPIView):
+#     """
+#     View to create a new supervision request
+#     """
+#     serializer_class = CreateThemeSupervisionRequestSerializer
+#     permission_classes = [permissions.IsAuthenticated, IsTeamMember]
+    
+#     def create(self, request, *args, **kwargs):
+#         serializer = self.get_serializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+        
+#         # Get validated data
+#         theme = serializer.validated_data['theme']
+#         team = serializer.validated_data['team']
+#         invitee = serializer.validated_data['invitee']
+#         message = serializer.validated_data.get('message', '')
+        
+#         try:
+#             # Create the supervision request using the service
+#             supervision_request = ThemeSupervisionService.create_supervision_request(
+#                 theme=theme,
+#                 team=team,
+#                 requester=request.user.student,
+#                 invitee=invitee,  # Pass the invitee to the service
+#                 message=message
+#             )
+            
+#             # Serialize the created request
+#             response_serializer = ThemeSupervisionRequestSerializer(supervision_request)
+            
+#             return Response({
+#                 'supervision_request': response_serializer.data,
+#                 'message': f'Supervision request sent to {invitee.get_full_name() or invitee.username}'
+#             }, status=status.HTTP_201_CREATED)
+            
+#         except Exception as e:
+#             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 class CreateSupervisionRequestView(generics.CreateAPIView):
     """
     View to create a new supervision request
@@ -63,12 +127,24 @@ class CreateSupervisionRequestView(generics.CreateAPIView):
         message = serializer.validated_data.get('message', '')
         
         try:
+            # Ensure the user is a student
+            if request.user.user_type != 'student':
+                return Response({'error': 'Only students can request theme supervision'}, 
+                                status=status.HTTP_403_FORBIDDEN)
+            
+            # Get the student instance if possible
+            try:
+                student_instance = request.user.student
+            except:
+                return Response({'error': 'Student profile not found'}, 
+                                status=status.HTTP_400_BAD_REQUEST)
+            
             # Create the supervision request using the service
             supervision_request = ThemeSupervisionService.create_supervision_request(
                 theme=theme,
                 team=team,
-                requester=request.user.student,
-                invitee=invitee,  # Pass the invitee to the service
+                requester=request.user,  # Pass student instance
+                invitee=invitee,
                 message=message
             )
             

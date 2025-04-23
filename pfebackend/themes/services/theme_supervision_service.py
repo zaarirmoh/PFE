@@ -36,9 +36,15 @@ class ThemeSupervisionService:
                 # Verify requester is a team owner
                 is_owner = TeamMembership.objects.filter(
                     team=team,
-                    user=requester.user,
+                    user=requester,
                     role=TeamMembership.ROLE_OWNER
                 ).exists()
+                
+                if hasattr(requester, 'student'):
+                    student_requester = requester.student
+                else:
+                    # Handle the case when there is no student instance
+                    raise ValidationError("The requester must be a student")
                 
                 # if not is_owner:
                 #     raise ValidationError("Only team owners can request theme supervision.")
@@ -162,7 +168,7 @@ class ThemeSupervisionService:
             
             theme = supervision_request.theme
             team = supervision_request.team
-            requester = supervision_request.requester.user
+            requester = supervision_request.requester
             
             # Verify user is the theme proposer or a co-supervisor
             is_proposer = theme.proposed_by == user
@@ -202,6 +208,7 @@ class ThemeSupervisionService:
                                 'theme_title': theme.title,
                                 'supervisor_name': supervisor_name,
                                 'event_type': 'supervision_request_accepted'
+                                # 'response_message': message
                             }
                         )
                         
@@ -297,6 +304,10 @@ class ThemeSupervisionService:
         Returns:
             QuerySet: Pending supervision requests for the user
         """
+        # Only applicable for teachers or administrators who can propose themes
+        if user.user_type not in ['teacher', 'administrator', 'external']:
+            return ThemeSupervisionRequest.objects.none()
+        
         # Get themes where user is proposer or co-supervisor
         proposed_themes = Theme.objects.filter(proposed_by=user)
         co_supervised_themes = Theme.objects.filter(co_supervisors=user)
@@ -309,6 +320,30 @@ class ThemeSupervisionService:
             theme__in=all_supervised_themes,
             status=ThemeSupervisionRequest.STATUS_PENDING
         ).select_related('theme', 'team', 'requester')
+    
+    # @staticmethod
+    # def get_user_pending_supervision_requests(user):
+    #     """
+    #     Get pending supervision requests for a user (as supervisor)
+        
+    #     Args:
+    #         user (User): Supervisor to get requests for
+            
+    #     Returns:
+    #         QuerySet: Pending supervision requests for the user
+    #     """
+    #     # Get themes where user is proposer or co-supervisor
+    #     proposed_themes = Theme.objects.filter(proposed_by=user)
+    #     co_supervised_themes = Theme.objects.filter(co_supervisors=user)
+        
+    #     # Combine the themes
+    #     all_supervised_themes = proposed_themes.union(co_supervised_themes)
+        
+    #     # Find pending requests for these themes
+    #     return ThemeSupervisionRequest.objects.filter(
+    #         theme__in=all_supervised_themes,
+    #         status=ThemeSupervisionRequest.STATUS_PENDING
+    #     ).select_related('theme', 'team', 'requester')
     
     @staticmethod
     def get_team_supervision_requests(team):
