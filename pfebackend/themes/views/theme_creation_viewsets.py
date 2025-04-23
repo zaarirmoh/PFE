@@ -36,7 +36,7 @@ class ThemeViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         """ Allow only teachers to create, update, or delete themes. """
         if self.action in ["create", "update", "partial_update", "destroy"]:
-            return [permissions.IsAuthenticated(), IsTeacher(), IsExternalUser()]
+            return [(permissions.IsAuthenticated & (IsTeacher | IsExternalUser))()]
         return [permissions.IsAuthenticated()]
     
     def get_serializer_class(self):

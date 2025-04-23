@@ -127,7 +127,8 @@ class Command(BaseCommand):
                 first_name=first_name,
                 last_name=last_name,
                 password=password,
-                user_type='administrator'
+                user_type='administrator',
+                is_staff=True
             )
             
             # Create administrator profile

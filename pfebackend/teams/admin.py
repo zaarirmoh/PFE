@@ -8,17 +8,17 @@ class TeamMembershipInline(TabularInline):
     """
     model = TeamMembership
     extra = 0  # No extra empty forms
-    readonly_fields = ('user', 'team', 'role', 'joined_at')
-    can_delete = False
+    # readonly_fields = ('user', 'team', 'role', 'joined_at')
+    # can_delete = False
     tab = True
     
-    def has_add_permission(self, request, obj=None):
-        """Prevent adding team members via admin"""
-        return False
+    # def has_add_permission(self, request, obj=None):
+    #     """Prevent adding team members via admin"""
+    #     return False
     
-    def has_change_permission(self, request, obj=None):
-        """Prevent changing team members via admin"""
-        return False
+    # def has_change_permission(self, request, obj=None):
+    #     """Prevent changing team members via admin"""
+    #     return False
 
 class TeamAdmin(ModelAdmin):
     """
@@ -66,13 +66,13 @@ class TeamAdmin(ModelAdmin):
         }),
     )
     
-    def has_add_permission(self, request):
-        """Disable the ability to add new teams through admin"""
-        return False
+    # def has_add_permission(self, request):
+    #     """Disable the ability to add new teams through admin"""
+    #     return False
     
-    def has_delete_permission(self, request, obj=None):
-        """Disable deletion of teams through admin"""
-        return False
+    # def has_delete_permission(self, request, obj=None):
+    #     """Disable deletion of teams through admin"""
+    #     return False
     
     def current_member_count(self, obj):
         """Display the current number of members"""
@@ -108,9 +108,9 @@ class TeamSettingsAdmin(ModelAdmin):
         }),
     )
     
-    def has_delete_permission(self, request, obj=None):
-        """Prevent deletion of settings"""
-        return False
+    # def has_delete_permission(self, request, obj=None):
+    #     """Prevent deletion of settings"""
+    #     return False
     
     def save_model(self, request, obj, form, change):
         """Set created_by and updated_by when saving"""
@@ -120,8 +120,7 @@ class TeamSettingsAdmin(ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
-admin.site.register(Team)
 
-# admin.site.register(Team, TeamAdmin)
+admin.site.register(Team, TeamAdmin)
 admin.site.register(TeamSettings, TeamSettingsAdmin)
 # admin.site.register(TeamMembership)
