@@ -158,6 +158,31 @@ class MeetingViewSet(viewsets.ModelViewSet):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except PermissionDenied as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
+        
+
+from .models import Upload
+from .serializers import UploadSerializer
+from users.permissions import IsTeacher
+from teams.permissions import IsTeamMember
+from rest_framework.exceptions import PermissionDenied
+
+class UploadViewSet(viewsets.ModelViewSet):
+    queryset = Upload.objects.all()
+    serializer_class = UploadSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action == 'create':
+            return [IsTeamMember()]
+        if self.action in ['list', 'retrieve']:
+            return [IsTeamMember() | IsTeacher()]
+        return [IsAuthenticated()]
+
+    def perform_create(self, serializer):
+        if not IsTeamMember().has_permission(self.request, self):
+            raise PermissionDenied("Only team members can upload resources.")
+        serializer.save(uploaded_by=self.request.user)
+
     
     # @action(detail=True, methods=['get'])
     # def attendances(self, request, pk=None):

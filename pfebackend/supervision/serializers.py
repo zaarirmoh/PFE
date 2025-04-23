@@ -103,3 +103,13 @@ class MeetingStatusUpdateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Cannot change status of a completed meeting.")
             
         return value
+    
+
+
+from .models import Upload
+
+class UploadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Upload
+        fields = ['id', 'team', 'title', 'url', 'uploaded_by', 'created_at']
+        read_only_fields = ['uploaded_by', 'created_at']
