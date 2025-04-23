@@ -1,6 +1,7 @@
 from django_filters import rest_framework as filters
 from django.db.models import Count, F, Q
 from teams.models import Team, TeamMembership
+from themes.models.theme_models import Theme
 
 class TeamFilter(filters.FilterSet):
     """
@@ -31,6 +32,9 @@ class TeamFilter(filters.FilterSet):
     min_members = filters.NumberFilter(method='filter_min_members')
     max_members = filters.NumberFilter(method='filter_max_members')
     maximum_size = filters.NumberFilter(field_name='maximum_members')
+
+    is_supervisor = filters.BooleanFilter(method='filter_is_supervisor')
+
     
     class Meta:
         model = Team
@@ -86,3 +90,21 @@ class TeamFilter(filters.FilterSet):
     def filter_max_members(self, queryset, name, value):
         """Filter for teams with at most this many members"""
         return queryset.annotate(member_count=Count('members')).filter(member_count__lte=value)
+
+    def filter_is_supervisor(self, queryset, name, value):
+        """
+        Return teams assigned to themes supervised by the current user
+        (either as proposed_by or as a co_supervisor).
+        """
+        if not value:
+            return queryset
+
+        user = self.request.user
+
+        # Get all themes the user supervises
+        supervised_themes = Theme.objects.filter(
+            Q(proposed_by=user) | Q(co_supervisors=user)
+        )
+
+        # Filter teams that are assigned to those themes
+        return queryset.filter(themeassignment__theme__in=supervised_themes).distinct()
