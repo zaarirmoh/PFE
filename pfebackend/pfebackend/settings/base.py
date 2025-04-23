@@ -28,7 +28,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("redis", 6379)],
+            "hosts": [("127.0.0.1", 6379)],
         },
     },
 }
@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'themes',
     # 'django_seed'
     'django_celery_beat',
+    'supervision',
 ]
 
 MIDDLEWARE = [
