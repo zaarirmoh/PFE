@@ -85,11 +85,10 @@ class TeamListCreateView(ListCreateAPIView):
     def perform_create(self, serializer):
         """Create a new team with the current user as owner"""
         try:
-            generated_name = str(uuid.uuid4())
+            # generated_name = str(uuid.uuid4())
                 
             # Use TeamService to create the team
-            team = TeamService.create_team(
-                name=generated_name,
+            team = TeamService.create_team_with_auto_name(
                 description=serializer.validated_data.get('description', ''),
                 owner=self.request.user
             )

@@ -13,7 +13,7 @@ class TeamSerializer(serializers.ModelSerializer):
     class Meta:
         model = Team
         fields = [
-            'id', 'description', 'created_at', 'updated_at',
+            'id', 'name', 'description', 'created_at', 'updated_at',
             'academic_year', 'maximum_members',
             'owner', 'member_count', 'has_capacity', 'is_verified',
         ]
