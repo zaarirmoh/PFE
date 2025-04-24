@@ -32,13 +32,14 @@ class ThemeFilter(filters.FilterSet):
     is_member = filters.BooleanFilter(method='filter_by_team_membership')
     is_supervisor = filters.BooleanFilter(method='filter_by_supervision')
     is_assigned = filters.BooleanFilter(method='filter_is_assigned')
+    is_verified = filters.BooleanFilter(field_name='is_verified')
     
     class Meta:
         model = Theme
         fields = [
             'title', 'description', 'academic_year', 'proposed_by', 'co_supervised_by',
             'team_id', 'created_after', 'created_before', 'updated_after', 'updated_before',
-            'is_member', 'is_supervisor', 'is_assigned'
+            'is_member', 'is_supervisor', 'is_assigned', 'is_verified'
         ]
     
     def filter_by_team(self, queryset, name, value):
