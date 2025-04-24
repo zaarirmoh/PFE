@@ -14,7 +14,7 @@ from .admin_inlines import (
     AdministratorProfileInline,
     ExternalUserProfileInline,
 )
-from users.models import User, Student
+from users.models import User, Student, StudentSkill
 from users.serializers.base import BaseProfileSerializer
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
@@ -130,4 +130,5 @@ class CustomUserAdmin(BaseUserAdmin, ModelAdmin):
     
 # Register your models here.
 admin.site.register(User, CustomUserAdmin)
+admin.site.register(StudentSkill, ModelAdmin)
 admin.site.unregister(Group)

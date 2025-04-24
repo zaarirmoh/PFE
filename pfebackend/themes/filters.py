@@ -97,3 +97,37 @@ class ThemeFilter(filters.FilterSet):
             return queryset.filter(id__in=assigned_theme_ids)
         
         return queryset.exclude(id__in=assigned_theme_ids)
+    
+    
+from django_filters import rest_framework as filters
+from themes.models import ThemeSupervisionRequest
+
+class ThemeSupervisionRequestFilter(filters.FilterSet):
+    """
+    Filter for ThemeSupervisionRequest to allow filtering by status, team, theme,
+    requester, and invitee
+    """
+    status = filters.CharFilter(lookup_expr='exact')
+    status_in = filters.CharFilter(field_name='status', method='filter_status_in')
+    team = filters.NumberFilter(field_name='team__id')
+    theme = filters.NumberFilter(field_name='theme__id')
+    requester = filters.NumberFilter(field_name='requester__id')
+    invitee = filters.NumberFilter(field_name='invitee__id')
+    academic_year = filters.CharFilter(field_name='theme__academic_year')
+    created_after = filters.DateTimeFilter(field_name='created_at', lookup_expr='gte')
+    created_before = filters.DateTimeFilter(field_name='created_at', lookup_expr='lte')
+
+    def filter_status_in(self, queryset, name, value):
+        """
+        Filter by multiple status values separated by commas
+        Example: ?status_in=PENDING,ACCEPTED
+        """
+        statuses = value.split(',')
+        return queryset.filter(status__in=statuses)
+    
+    class Meta:
+        model = ThemeSupervisionRequest
+        fields = [
+            'status', 'team', 'theme', 'requester', 'invitee',
+            'academic_year', 'created_after', 'created_before'
+        ]
