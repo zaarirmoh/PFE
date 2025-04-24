@@ -2,6 +2,7 @@ from rest_framework import generics, filters, status
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import NotFound, PermissionDenied
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth import get_user_model
 from users.serializers.user import CustomUserSerializer
@@ -12,6 +13,9 @@ from .filters import StudentFilter, TeacherFilter, ExternalUserFilter
 from .serializers import CustomUserSerializer
 from documents.models import DocumentType
 from documents.serializers import DocumentSerializer
+from .models import StudentSkill, Student
+from .permissions import IsStudent
+from .serializers import StudentSkillSerializer
 
 User = get_user_model()
 
@@ -252,3 +256,30 @@ class UserProfileRetrieveView(generics.RetrieveAPIView):
     serializer_class = CustomUserSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'id'
+    
+class StudentSkillCreateView(generics.CreateAPIView):
+    """
+    View for creating a new skill for a student
+    """
+    serializer_class = StudentSkillSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
+    
+    def get_student(self):
+        student_id = self.kwargs.get('id')
+        try:
+            return Student.objects.get(id=student_id)
+        except Student.DoesNotExist:
+            raise NotFound("Student not found")
+    
+    def check_object_permissions(self, request, student):
+        # Check if user is adding skills to their own profile
+        if request.user != student.user and not request.user.is_staff:
+            raise PermissionDenied("You don't have permission to add skills to this student")
+        return super().check_object_permissions(request, student)
+    
+    def perform_create(self, serializer):
+        student = self.get_student()
+        self.check_object_permissions(self.request, student)
+        serializer.save(student=student)
+
+    
