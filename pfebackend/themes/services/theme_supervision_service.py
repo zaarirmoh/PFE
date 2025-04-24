@@ -81,7 +81,7 @@ class ThemeSupervisionService:
                 from notifications.services import NotificationService
                 
                 # Format requester name and team name
-                requester_name = requester.user.get_full_name() or requester.user.username
+                requester_name = requester.get_full_name() or requester.username
                 team_name = escape(team.name)
                 theme_title = escape(theme.title)
                 
@@ -100,8 +100,8 @@ class ThemeSupervisionService:
                     'team_id': team.id,
                     'team_name': team.name,
                     'requester': {
-                        'id': requester.user.id,
-                        'username': requester.user.username,
+                        'id': requester.id,
+                        'username': requester.username,
                         'name': requester_name
                     }
                 }

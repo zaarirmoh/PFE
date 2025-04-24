@@ -56,7 +56,7 @@ from .models.project_models import ThemeAssignment  # import your intermediate m
 # from .models.team_models import Team  # adjust import if needed
  
 
-admin.site.register(Theme)
+admin.site.register(Theme, ModelAdmin)
 admin.site.register(ThemeAssignment)
 
 # class ThemeAssignmentInline(admin.TabularInline):
