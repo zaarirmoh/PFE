@@ -282,4 +282,25 @@ class StudentSkillCreateView(generics.CreateAPIView):
         self.check_object_permissions(self.request, student)
         serializer.save(student=student)
 
+
+class StudentSkillDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    View for retrieving, updating, and deleting a student's skill
+    """
+    serializer_class = StudentSkillSerializer
+    permission_classes = [IsAuthenticated, IsStudent]
+    lookup_url_kwarg = 'skill_id'
+
+    def get_queryset(self):
+        student_id = self.kwargs.get('id')
+        try:
+            student = Student.objects.get(id=student_id)
+        except Student.DoesNotExist:
+            raise NotFound("Student not found")
+        
+        # Check if user is allowed
+        if self.request.user != student.user and not self.request.user.is_staff:
+            raise PermissionDenied("You don't have permission to modify skills for this student")
+        
+        return StudentSkill.objects.filter(student=student)
     

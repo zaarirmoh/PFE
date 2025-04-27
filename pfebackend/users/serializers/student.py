@@ -4,7 +4,7 @@ from users.models import Student, StudentSkill
 class StudentSkillSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentSkill
-        fields = ('name', 'proficiency_level')
+        fields = ('id', 'name', 'proficiency_level')
         
 class StudentSerializer(serializers.ModelSerializer):
     skills = StudentSkillSerializer(many=True, read_only=True)

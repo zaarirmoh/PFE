@@ -8,6 +8,7 @@ from .views import (
     ProfileListView,
     UserProfileRetrieveView,
     StudentSkillCreateView,
+    StudentSkillDetailView,
     )
 
 urlpatterns = [
@@ -18,6 +19,7 @@ urlpatterns = [
     
     path('students/', StudentListView.as_view(), name='student-list'),
     path('students/<int:id>/skills/', StudentSkillCreateView.as_view(), name='student-skill-create'),
+    path('students/<int:id>/skills/<int:skill_id>/', StudentSkillDetailView.as_view(), name='student-skill-detail'),
     path('teachers/', TeacherListView.as_view(), name='teacher-list'),
     path('external-users/', ExternalUserListView.as_view(), name='external-user-list'),
     

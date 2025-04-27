@@ -207,8 +207,8 @@ class ThemeSupervisionService:
                                 'theme_id': theme.id,
                                 'theme_title': theme.title,
                                 'supervisor_name': supervisor_name,
-                                'event_type': 'supervision_request_accepted'
-                                # 'response_message': message
+                                'event_type': 'supervision_request_accepted',
+                                'response_message': message
                             }
                         )
                         
