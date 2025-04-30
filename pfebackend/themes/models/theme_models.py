@@ -36,7 +36,7 @@ class Theme(AuditableModel):
 
     def clean(self):
 
-        if self.proposed_by.user_type != "teacher":
+        if self.proposed_by.user_type not in ("teacher", "external"):
             raise ValidationError({"proposed_by": "Only teachers can propose themes."})
 
     def save(self, *args, **kwargs):
