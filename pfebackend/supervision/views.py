@@ -3,6 +3,7 @@ from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.generics import ListAPIView
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Q
 from .models import Meeting
@@ -11,6 +12,7 @@ from .serializers import (
     MeetingDetailSerializer,
     MeetingCreateUpdateSerializer,
     MeetingStatusUpdateSerializer,
+    ProjectListSerializer,
 )
 from .services import MeetingService
 # from .permissions import IsTeacherOrReadOnly, IsMeetingCreatorOrReadOnly
@@ -18,6 +20,11 @@ from users.models import Teacher
 import logging
 from rest_framework import serializers
 from common.pagination import StaticPagination
+from themes.serializers import ThemeAssignmentSerializer
+from django_filters.rest_framework import DjangoFilterBackend
+from themes.models import ThemeAssignment
+from .filters import ProjectListFilter
+
 
 logger = logging.getLogger(__name__)
 
@@ -275,3 +282,70 @@ class UploadViewSet(viewsets.ModelViewSet):
         
 #         serializer = MeetingAttendanceSerializer(pending, many=True)
 #         return Response(serializer.data)
+
+
+class ProjectListView(ListAPIView):
+    """
+    List projects (theme assignments) with comprehensive filtering options.
+    
+    ## Endpoints
+    GET /api/projects/ - List all projects with filtering options
+    
+    ## Query Parameters
+    - Basic filters:
+        - `academic_year` - Filter by academic year (e.g., '5siw', '4isi')
+        - `theme_id` - Filter by specific theme ID
+        - `supervisor_id` - Filter by supervisor ID (includes both main and co-supervisors)
+        - `team_id` - Filter by specific team ID
+        - `member_id` - Filter by team member ID
+        - `status` - Filter by assignment status
+    
+    - Date filters:
+        - `date_from` - Projects created on or after specified date (YYYY-MM-DD)
+        - `date_to` - Projects created on or before specified date (YYYY-MM-DD)
+    
+    - Searching:
+        - `search` - Search in theme titles and team names
+    
+    - Sorting:
+        - `ordering` - Sort by field (prefix with - for descending)
+          Examples: ordering=theme__title, ordering=-created_at
+          Available fields: created_at, team__name, theme__title, academic_year, status
+    
+    - Pagination:
+        - `page` - Page number
+        - `page_size` - Number of results per page
+    
+    ## Response
+    Returns a paginated list of projects with detailed information including:
+    - Theme details
+    - Team information
+    - Team members with roles
+    - Team owner
+    - Supervisors (proposer and co-supervisors)
+    - Associated uploads
+    - Scheduled meetings
+    """
+    serializer_class = ProjectListSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = StaticPagination
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_class = ProjectListFilter
+    search_fields = ['theme__title', 'team__name']
+    ordering_fields = ['created_at', 'team__name', 'theme__title', 'academic_year', 'status']
+    ordering = ['-created_at']  # Default ordering
+    
+    def get_queryset(self):
+        """
+        Get all theme assignments with prefetched related data for performance
+        """
+        return ThemeAssignment.objects.select_related(
+            'theme', 'team', 'assigned_by'
+        ).prefetch_related(
+            'theme__co_supervisors',
+            'team__members',
+            'team__uploads',
+            'team__meetings',
+            'team__teammembership_set',
+            'team__teammembership_set__user'
+        ).all()

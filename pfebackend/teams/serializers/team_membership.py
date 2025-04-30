@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from teams.models import TeamMembership, Team
 from users.models import Student
+from users.serializers import CustomUserSerializer as UserSerializer
 
 User = get_user_model()
 
@@ -10,7 +11,7 @@ class TeamMembershipSerializer(serializers.ModelSerializer):
     """Serializer for TeamMembership model"""
     
     username = serializers.CharField(write_only=True)
-    user = serializers.SerializerMethodField(read_only=True)
+    user = UserSerializer(read_only=True)
     team_name = serializers.CharField(source='team.name', read_only=True)
     academic_year = serializers.CharField(source='team.academic_year', read_only=True)
     
@@ -19,12 +20,12 @@ class TeamMembershipSerializer(serializers.ModelSerializer):
         fields = ['id', 'team', 'username', 'user', 'team_name', 'academic_year', 'role', 'joined_at']
         read_only_fields = ['id', 'joined_at', 'user', 'team_name', 'academic_year']
         
-    def get_user(self, obj):
-        """Return username and display name of user"""
-        return {
-            'username': obj.user.username,
-            'display_name': obj.user.get_full_name() or obj.user.username
-        }
+    # def get_user(self, obj):
+    #     """Return username and display name of user"""
+    #     return {
+    #         'username': obj.user.username,
+    #         'display_name': obj.user.get_full_name() or obj.user.username
+    #     }
         
     def validate(self, data):
         """Validate membership creation/update"""
