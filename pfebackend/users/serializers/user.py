@@ -46,6 +46,7 @@ class CustomUserSerializer(UserSerializer):
         fields = (
             'id', 'email', 'username', 'first_name', 'last_name', 'user_type', 
             'profile','profile_picture_url','country','state','phone_number',
+            'github','linkedin','facebook','twitter','instagram',
             'postal_code','resume','year_of_birth',
             
             )
