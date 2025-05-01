@@ -1,9 +1,9 @@
-# meetings/models.py
 from django.db import models
 from django.conf import settings
 from common.models import AuditableModel
 from teams.models import Team
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 
 class Meeting(AuditableModel):
@@ -111,84 +111,3 @@ class Meeting(AuditableModel):
             self.updated_by = completed_by
             
         self.save(update_fields=['status', 'updated_by', 'updated_at'])
-
-
-# class MeetingAttendance(models.Model):
-#     """
-#     Represents attendance status for a meeting participant
-#     """
-#     STATUS_PENDING = 'pending'
-#     STATUS_CONFIRMED = 'confirmed'
-#     STATUS_DECLINED = 'declined'
-#     STATUS_ATTENDED = 'attended'
-#     STATUS_ABSENT = 'absent'
-    
-#     STATUS_CHOICES = (
-#         (STATUS_PENDING, 'Pending'),
-#         (STATUS_CONFIRMED, 'Confirmed'),
-#         (STATUS_DECLINED, 'Declined'),
-#         (STATUS_ATTENDED, 'Attended'),
-#         (STATUS_ABSENT, 'Absent'),
-#     )
-    
-#     meeting = models.ForeignKey(
-#         Meeting, 
-#         on_delete=models.CASCADE, 
-#         related_name='attendances'
-#     )
-#     attendee = models.ForeignKey(
-#         settings.AUTH_USER_MODEL, 
-#         on_delete=models.CASCADE, 
-#         related_name='meeting_attendances'
-#     )
-#     status = models.CharField(
-#         max_length=20, 
-#         choices=STATUS_CHOICES, 
-#         default=STATUS_PENDING
-#     )
-#     response_timestamp = models.DateTimeField(null=True, blank=True)
-#     response_notes = models.TextField(blank=True)
-    
-#     class Meta:
-#         unique_together = ('meeting', 'attendee')
-        
-#     def __str__(self):
-#         return f"{self.attendee.username} - {self.meeting.title} ({self.get_status_display()})"
-        
-#     def mark_attendance(self, status, notes=""):
-#         """
-#         Update the attendance status
-        
-#         Args:
-#             status: New attendance status
-#             notes: Optional notes about the attendance
-#         """
-#         if status not in dict(self.STATUS_CHOICES):
-#             raise ValidationError(f"Invalid status: {status}")
-            
-#         self.status = status
-        
-#         if notes:
-#             self.response_notes = notes
-            
-#         self.response_timestamp = timezone.now()
-#         self.save(update_fields=['status', 'response_notes', 'response_timestamp'])
-
-
-# Import at the end to avoid circular imports
-from django.utils import timezone
-
-
-from django.db import models
-from django.conf import settings
-from teams.models.team import Team
-
-class Upload(models.Model):
-    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='uploads')
-    title = models.CharField(max_length=255)
-    url = models.URLField()
-    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.title
