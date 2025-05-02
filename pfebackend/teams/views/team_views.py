@@ -42,6 +42,7 @@ class TeamListCreateView(ListCreateAPIView):
         - `has_capacity` - Teams with capacity for more members (true/false)
         - `is_owner` - Teams where current user is the owner (true/false)
         - `match_student_profile` - Teams matching current user's academic year and program (true/false)
+        - `is_supervisor` - Teams where current teacher is a supervisor (true/false)
     
     - Member count filters:
         - `min_members` - Teams with at least this many members
