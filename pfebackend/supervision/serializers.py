@@ -9,26 +9,8 @@ from teams.serializers import TeamMembershipSerializer
 from themes.serializers import ThemeOutputSerializer as ThemeSerializer
 from users.serializers import CustomUserSerializer as UserSerializer
 from themes.models import ThemeAssignment
-
-
-# class MeetingAttendanceSerializer(serializers.ModelSerializer):
-#     """Serializer for meeting attendance"""
-#     attendee = StudentSerializer(read_only=True)
-    
-#     class Meta:
-#         model = MeetingAttendance
-#         fields = [
-#             'id', 'attendee', 'status', 'response_timestamp', 'response_notes'
-#         ]
-#         read_only_fields = ['id', 'attendee', 'response_timestamp']
-
-
-# class MeetingAttendanceUpdateSerializer(serializers.ModelSerializer):
-#     """Serializer for updating meeting attendance status"""
-#     class Meta:
-#         model = MeetingAttendance
-#         fields = ['status', 'response_notes']
-
+from .models import Defense, JuryMember
+from teams.serializers import TeamSerializer
 
 class MeetingListSerializer(serializers.ModelSerializer):
     """Serializer for listing meetings"""
@@ -119,7 +101,28 @@ class UploadSerializer(serializers.ModelSerializer):
         model = Upload
         fields = ['id', 'team', 'title', 'url', 'uploaded_by', 'created_at']
         read_only_fields = ['uploaded_by', 'created_at']
+
+class JuryMemberSerializer(serializers.ModelSerializer):
+    user_name = serializers.SerializerMethodField()
+    role_name = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = JuryMember
+        fields = ['id', 'user', 'user_name', 'role', 'role_name', 'is_president', 'notes']
+    
+    def get_user_name(self, obj):
+        return obj.user.get_full_name() or obj.user.username
         
+    def get_role_name(self, obj):
+        return obj.role.name if obj.role else None
+        
+class DefenseSerializer(serializers.ModelSerializer):
+    jury_members = JuryMemberSerializer(many=True, read_only=True)
+    team = TeamSerializer
+    class Meta:
+        model = Defense
+        fields = '__all__'
+        read_only_fields = ['id', 'created_at', 'updated_at']
         
         
 class ProjectListSerializer(serializers.ModelSerializer):

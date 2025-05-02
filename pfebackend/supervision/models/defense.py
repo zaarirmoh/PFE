@@ -78,7 +78,7 @@ class Defense(TimeStampedModel):
     
     
     def __str__(self):
-        return f"{self.title} - {self.team.name} ({self.date})"
+        return f"{self.title} - {self.team.name} ({self.date} - {self.jury.all()} jury members)"
     
     
     class Meta:
