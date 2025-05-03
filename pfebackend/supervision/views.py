@@ -1,4 +1,3 @@
-# meetings/views.py
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -6,16 +5,17 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import ListAPIView
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Q
-from .models import Meeting
+from .models import Meeting, Defense
 from .serializers import (
     MeetingListSerializer,
     MeetingDetailSerializer,
     MeetingCreateUpdateSerializer,
     MeetingStatusUpdateSerializer,
     ProjectListSerializer,
+    DefenseSerializer,
+    DefenseDetailSerializer,
 )
 from .services import MeetingService
-# from .permissions import IsTeacherOrReadOnly, IsMeetingCreatorOrReadOnly
 from users.models import Teacher
 import logging
 from rest_framework import serializers
@@ -24,7 +24,8 @@ from themes.serializers import ThemeAssignmentSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from themes.models import ThemeAssignment
 from .filters import ProjectListFilter
-
+from teams.permissions import IsTeamOwner
+from .permissions import IsJuryPresident
 
 logger = logging.getLogger(__name__)
 
@@ -190,98 +191,6 @@ class UploadViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("Only team members can upload resources.")
         serializer.save(uploaded_by=self.request.user)
 
-    
-    # @action(detail=True, methods=['get'])
-    # def attendances(self, request, pk=None):
-    #     """Get all attendance records for a meeting"""
-    #     meeting = self.get_object()
-        
-    #     # Check if user has access to view attendances
-    #     user = self.request.user
-    #     if meeting.scheduled_by != user and user not in meeting.team.members.all():
-    #         return Response(
-    #             {'error': 'You do not have permission to view this meeting\'s attendances'},
-    #             status=status.HTTP_403_FORBIDDEN
-    #         )
-        
-    #     attendances = MeetingAttendance.objects.filter(meeting=meeting).select_related('attendee')
-    #     serializer = MeetingAttendanceSerializer(attendances, many=True)
-    #     return Response(serializer.data)
-    
-    # @action(detail=True, methods=['get'])
-    # def my_attendance(self, request, pk=None):
-    #     """Get the attendance record for the current user"""
-    #     meeting = self.get_object()
-    #     user = self.request.user
-        
-    #     try:
-    #         # Find the user's attendance record
-    #         attendance = MeetingAttendance.objects.get(meeting=meeting, attendee=user)
-    #         serializer = MeetingAttendanceSerializer(attendance)
-    #         return Response(serializer.data)
-            
-    #     except MeetingAttendance.DoesNotExist:
-    #         return Response(
-    #             {'error': 'You do not have an attendance record for this meeting'},
-    #             status=status.HTTP_404_NOT_FOUND
-    #         )
-
-
-# class MeetingAttendanceViewSet(viewsets.GenericViewSet):
-#     """
-#     API endpoint for managing meeting attendance
-#     """
-#     permission_classes = [IsAuthenticated]
-#     serializer_class = MeetingAttendanceSerializer
-    
-#     def get_queryset(self):
-#         """Return all attendance records for the authenticated user"""
-#         return MeetingAttendance.objects.filter(
-#             attendee=self.request.user
-#         ).select_related('meeting', 'meeting__team')
-    
-#     @action(detail=True, methods=['patch'])
-#     def update_status(self, request, pk=None):
-#         """Update the status of an attendance record"""
-#         user = self.request.user
-        
-#         serializer = MeetingAttendanceUpdateSerializer(data=request.data)
-#         if not serializer.is_valid():
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-#         status_value = serializer.validated_data.get('status')
-#         notes = serializer.validated_data.get('response_notes', '')
-        
-#         try:
-#             # Use the service to update attendance status
-#             attendance = MeetingService.update_attendance_status(
-#                 attendance_id=pk,
-#                 user=user,
-#                 status=status_value,
-#                 notes=notes
-#             )
-            
-#             result_serializer = MeetingAttendanceSerializer(attendance)
-#             return Response(result_serializer.data)
-            
-#         except ValidationError as e:
-#             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-#         except PermissionDenied as e:
-#             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-    
-#     @action(detail=False, methods=['get'])
-#     def pending(self, request):
-#         """Get all pending attendance records for the user"""
-#         user = self.request.user
-        
-#         pending = MeetingAttendance.objects.filter(
-#             attendee=user,
-#             status=MeetingAttendance.STATUS_PENDING,
-#             meeting__status=Meeting.STATUS_SCHEDULED
-#         ).select_related('meeting', 'meeting__team', 'meeting__scheduled_by')
-        
-#         serializer = MeetingAttendanceSerializer(pending, many=True)
-#         return Response(serializer.data)
 
 
 class ProjectListView(ListAPIView):
@@ -349,3 +258,112 @@ class ProjectListView(ListAPIView):
             'team__teammembership_set',
             'team__teammembership_set__user'
         ).all()
+        
+class DefenseViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for handling defense-related operations.
+    """
+    queryset = Defense.objects.all()
+    serializer_class = DefenseSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = StaticPagination
+
+    def get_queryset(self):
+        """
+        Filter defenses based on user role:
+        - Students see defenses for their teams
+        - Teachers/jury members see defenses they're part of
+        """
+        user = self.request.user
+        
+        # Return all defenses for admin users
+        if user.is_staff or user.is_superuser:
+            return Defense.objects.all()
+        
+        # For normal users, filter based on their relation to defenses
+        return Defense.objects.filter(
+            # User is part of the team being evaluated
+            Q(theme_assignment__team__members=user) |
+            # User is part of the jury
+            Q(jury=user)
+        ).distinct()
+        
+    def get_serializer_class(self):
+        """
+        Return appropriate serializer class based on the action.
+        """
+        if self.action == 'list':
+            return DefenseSerializer
+        elif self.action == 'update_documents':
+            return DefenseSerializer
+        elif self.action == 'update_results':
+            return DefenseSerializer
+        else:
+            # For retrieve, create, update, partial_update
+            return DefenseDetailSerializer
+
+    @action(detail=True, methods=['patch'], permission_classes=[IsTeamOwner])
+    def update_documents(self, request, pk=None):
+        """
+        Custom action for team owners to update document URIs.
+        """
+        defense = self.get_object()
+        
+        # Only allow updating specific fields
+        allowed_fields = ['defense_uri', 'report_uri', 'specifications_document_uri']
+        update_data = {k: v for k, v in request.data.items() if k in allowed_fields}
+        
+        serializer = self.get_serializer(defense, data=update_data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['patch'], permission_classes=[IsJuryPresident])
+    def update_results(self, request, pk=None):
+        """
+        Custom action for jury presidents to update results and grades.
+        """
+        defense = self.get_object()
+        
+        # Only allow updating specific fields
+        allowed_fields = ['result', 'grade', 'status']
+        update_data = {k: v for k, v in request.data.items() if k in allowed_fields}
+        
+        serializer = self.get_serializer(defense, data=update_data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        
+        return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        """
+        Override update method to enforce field-level permissions
+        """
+        instance = self.get_object()
+        user = request.user
+        data = request.data.copy()
+        
+        # Check what fields are being updated and enforce permissions
+        document_fields = ['defense_uri', 'report_uri', 'specifications_document_uri']
+        result_fields = ['result', 'grade']
+        
+        has_document_fields = any(field in data for field in document_fields)
+        has_result_fields = any(field in data for field in result_fields)
+        
+        # Check if user is team owner when updating document fields
+        if has_document_fields and not IsTeamOwner().has_object_permission(request, self, instance):
+            return Response(
+                {"detail": "Only team owners can update document URIs."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Check if user is jury president when updating result fields
+        if has_result_fields and not IsJuryPresident().has_object_permission(request, self, instance):
+            return Response(
+                {"detail": "Only jury presidents can update results and grades."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # If all permission checks pass, proceed with update
+        return super().update(request, *args, **kwargs)

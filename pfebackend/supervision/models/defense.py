@@ -41,6 +41,7 @@ class Defense(TimeStampedModel):
     @property
     def theme(self):
         return self.theme_assignment.theme
+    
     jury = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         through='JuryMember',
@@ -55,6 +56,11 @@ class Defense(TimeStampedModel):
     # Location information
     location = models.CharField(_("Location"), max_length=255)
     room = models.CharField(_("Room"), max_length=100, blank=True)
+    
+    # Document URIs
+    defense_uri = models.URLField(_("Defense URI"), blank=True)
+    report_uri = models.URLField(_("Report URI"), blank=True)
+    specifications_document_uri = models.URLField(_("Specifications Document URI"), blank=True)
     
     description = models.TextField(_("Description"), blank=True)
 
@@ -78,7 +84,7 @@ class Defense(TimeStampedModel):
     
     
     def __str__(self):
-        return f"{self.title} - {self.team.name} ({self.date} - {self.jury.all()} jury members)"
+        return f"{self.title} - {self.team.name} ({self.date} jury members)"
     
     
     class Meta:

@@ -11,6 +11,7 @@ from users.serializers import CustomUserSerializer as UserSerializer
 from themes.models import ThemeAssignment
 from .models import Defense, JuryMember
 from teams.serializers import TeamSerializer
+from themes.serializers import ThemeOutputSerializer
 
 class MeetingListSerializer(serializers.ModelSerializer):
     """Serializer for listing meetings"""
@@ -122,6 +123,23 @@ class DefenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Defense
         fields = '__all__'
+        read_only_fields = ['id', 'created_at', 'updated_at']
+        
+class DefenseDetailSerializer(serializers.ModelSerializer):
+    """Serializer for detailed defense information"""
+    team = TeamSerializer(read_only=True)
+    theme = ThemeOutputSerializer(read_only=True)
+    jury_members = JuryMemberSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Defense
+        fields = [
+            'id', 'title', 'theme_assignment', 'team', 'theme',
+            'jury_members', 'date', 'start_time', 'end_time',
+            'location', 'room', 'defense_uri', 'report_uri',
+            'specifications_document_uri', 'description',
+            'status', 'result', 'grade', 'created_at', 'updated_at'
+        ]
         read_only_fields = ['id', 'created_at', 'updated_at']
         
         

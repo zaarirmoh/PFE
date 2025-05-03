@@ -1,6 +1,7 @@
 # meetings/permissions.py
 from rest_framework import permissions
 from users.models import Teacher
+from .models import JuryMember
 
 
 class IsTeacherOrReadOnly(permissions.BasePermission):
@@ -41,18 +42,14 @@ class IsMeetingCreatorOrReadOnly(permissions.BasePermission):
         return obj.scheduled_by == request.user
 
 
-# class IsAttendeeOrMeetingCreator(permissions.BasePermission):
-#     """
-#     Permission to only allow the attendee or meeting creator to view/modify attendance.
-#     """
-    
-#     def has_object_permission(self, request, view, obj):
-#         # Allow access to the attendee themself
-#         if obj.attendee == request.user:
-#             return True
-            
-#         # Allow access to the meeting creator
-#         if obj.meeting.scheduled_by == request.user:
-#             return True
-            
-#         return False
+class IsJuryPresident(permissions.BasePermission):
+    """
+    Custom permission to only allow jury presidents to update results.
+    """
+    def has_object_permission(self, request, view, obj):
+        # Check if user is president of this defense
+        return JuryMember.objects.filter(
+            defense=obj,
+            user=request.user,
+            is_president=True
+        ).exists()
