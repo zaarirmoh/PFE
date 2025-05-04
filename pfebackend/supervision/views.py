@@ -18,6 +18,7 @@ from users.models import Teacher
 import logging
 from rest_framework import serializers
 from common.pagination import StaticPagination
+from notifications.services import NotificationService
 
 logger = logging.getLogger(__name__)
 
@@ -165,7 +166,27 @@ from .serializers import UploadSerializer
 from users.permissions import IsTeacher
 from teams.permissions import IsTeamMember
 from rest_framework.exceptions import PermissionDenied
+from teams.models import Team
 
+
+def get_supervisors_and_teachers(team_id):
+    """Helper function to get all supervisors and proposed by teachers for a team"""
+    team = Team.objects.get(id=team_id)
+    recipients = list(team.cosupervisors.all())
+    if team.proposed_by:
+        recipients.append(team.proposed_by)
+    return recipients
+
+
+def notify_upload(user, team_id, upload_title):
+    """Helper function to send notifications about new uploads"""
+    recipients = get_supervisors_and_teachers(team_id)
+    for recipient in recipients:
+        NotificationService.create_and_send(
+            recipient=recipient.user,
+            content=f"New resource '{upload_title}' uploaded by {user.username}",
+            notification_type="resource_upload"
+        )
 class UploadViewSet(viewsets.ModelViewSet):
     queryset = Upload.objects.all()
     serializer_class = UploadSerializer
@@ -178,9 +199,25 @@ class UploadViewSet(viewsets.ModelViewSet):
             return [IsTeamMember() | IsTeacher()]
         return [IsAuthenticated()]
 
+
     def perform_create(self, serializer):
-        if not IsTeamMember().has_permission(self.request, self):
-            raise PermissionDenied("Only team members can upload resources.")
+        
+        team_id = self.request.data.get('team')
+        upload = serializer.save(
+            uploaded_by=self.request.user,
+            team_id=team_id,
+            metadata={
+                "uploaded_by": self.request.user.id,
+                "team": team_id,
+                "created_at": serializer.validated_data.get('created_at'),
+                "updated_by": self.request.user.id
+            }
+        )
+
+        # Send notifications to supervisors and teachers
+        notify_upload(self.request.user, team_id, upload.title)
+
+       # NotificationService.create_and_send(recipient=,content="New resource uploaded", notification_type="resource_upload")
         serializer.save(uploaded_by=self.request.user)
 
     
