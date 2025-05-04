@@ -2,6 +2,7 @@
 from common.models import AuditableModel, TimeStampedModel
 from django.db import models
 from .theme_models  import *
+from teams.models import Team
 
 
 
@@ -9,7 +10,8 @@ class ThemeAssignment(TimeStampedModel):
     """
     Represents the final assignment of a theme to a team.
     """
-    team = models.OneToOneField('teams.Team', on_delete=models.CASCADE, related_name='assigned_theme')
+    title = models.CharField(max_length=255, blank=True, null=True)
+    team = models.OneToOneField(Team, on_delete=models.CASCADE, related_name='assigned_theme')
     # theme = models.OneToOneField(Theme, on_delete=models.CASCADE, related_name='assigned_team')
     theme = models.ForeignKey(Theme, on_delete=models.CASCADE, related_name='assigned_teams')
 

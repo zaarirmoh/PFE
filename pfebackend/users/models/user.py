@@ -69,6 +69,36 @@ class User(AbstractBaseUser):
         null=True, 
         help_text="Enter a valid phone number with country code"
     )
+    github = models.URLField(
+        max_length=500, 
+        blank=True, 
+        null=True,
+        help_text="GitHub profile URL"
+    )
+    linkedin = models.URLField(
+        max_length=500, 
+        blank=True, 
+        null=True,
+        help_text="LinkedIn profile URL"
+    )
+    twitter = models.URLField(
+        max_length=500, 
+        blank=True, 
+        null=True,
+        help_text="Twitter profile URL"
+    )
+    facebook = models.URLField(
+        max_length=500, 
+        blank=True, 
+        null=True,
+        help_text="Facebook profile URL"
+    )
+    instagram = models.URLField(
+        max_length=500, 
+        blank=True, 
+        null=True,
+        help_text="Instagram profile URL"
+    )
     
     # small resume
     resume = models.TextField(

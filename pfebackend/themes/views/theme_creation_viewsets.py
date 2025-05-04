@@ -30,6 +30,7 @@ class ThemeViewSet(viewsets.ModelViewSet):
         - `is_supervisor` (bool) - For teachers: filter to show only themes they propose or co-supervise.
         - `is_assigned` (bool) - Filter to show only themes that are assigned to any team.
         - `created_after`, `created_before`, `updated_after`, `updated_before` (datetime) - Filter by creation/update date.
+        - `is_verified` (bool) - Filter by verification status.
     """
     queryset = Theme.objects.all().order_by("-created_at")
 
@@ -115,6 +116,18 @@ class ThemeViewSet(viewsets.ModelViewSet):
                 type=openapi.TYPE_STRING,
                 enum=["created_at", "-created_at", "title", "-title"]
             ),
+            openapi.Parameter(
+                "page", openapi.IN_QUERY, description="Page number for pagination",
+                type=openapi.TYPE_INTEGER
+            ),
+            openapi.Parameter(
+                "page_size", openapi.IN_QUERY, description="Number of results per page",
+                type=openapi.TYPE_INTEGER
+            ),
+            openapi.Parameter(
+                "is_verified", openapi.IN_QUERY, description="Filter by verification status",
+                type=openapi.TYPE_BOOLEAN
+            )
         ],
         responses={200: ThemeOutputSerializer(many=True)}
     )

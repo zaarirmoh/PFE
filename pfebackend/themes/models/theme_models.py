@@ -15,6 +15,8 @@ class Theme(AuditableModel):
     description = models.TextField()
     tools = models.TextField(help_text="Enter tools")
     documents = models.ManyToManyField(Document, related_name="themes", blank=True)
+    
+    is_verified = models.BooleanField(default=False, help_text="Indicates if the theme has been verified by the administration.")
 
     ACADEMIC_YEAR_CHOICES = (
         ('2', '2nd Year'),
@@ -34,7 +36,7 @@ class Theme(AuditableModel):
 
     def clean(self):
 
-        if self.proposed_by.user_type != "teacher":
+        if self.proposed_by.user_type not in ("teacher", "external"):
             raise ValidationError({"proposed_by": "Only teachers can propose themes."})
 
     def save(self, *args, **kwargs):

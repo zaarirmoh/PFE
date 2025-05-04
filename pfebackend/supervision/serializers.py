@@ -2,27 +2,16 @@
 from rest_framework import serializers
 from .models import Meeting
 from teams.serializers import TeamSerializer
-from users.serializers import StudentSerializer, TeacherSerializer
-
-
-# class MeetingAttendanceSerializer(serializers.ModelSerializer):
-#     """Serializer for meeting attendance"""
-#     attendee = StudentSerializer(read_only=True)
-    
-#     class Meta:
-#         model = MeetingAttendance
-#         fields = [
-#             'id', 'attendee', 'status', 'response_timestamp', 'response_notes'
-#         ]
-#         read_only_fields = ['id', 'attendee', 'response_timestamp']
-
-
-# class MeetingAttendanceUpdateSerializer(serializers.ModelSerializer):
-#     """Serializer for updating meeting attendance status"""
-#     class Meta:
-#         model = MeetingAttendance
-#         fields = ['status', 'response_notes']
-
+from users.serializers import TeacherSerializer
+from teams.serializers import TeamSerializer
+from teams.models import TeamMembership
+from teams.serializers import TeamMembershipSerializer
+from themes.serializers import ThemeOutputSerializer as ThemeSerializer
+from users.serializers import CustomUserSerializer as UserSerializer
+from themes.models import ThemeAssignment
+from .models import Defense, JuryMember
+from teams.serializers import TeamSerializer
+from themes.serializers import ThemeOutputSerializer
 
 class MeetingListSerializer(serializers.ModelSerializer):
     """Serializer for listing meetings"""
@@ -113,3 +102,121 @@ class UploadSerializer(serializers.ModelSerializer):
         model = Upload
         fields = ['id', 'team', 'title', 'url', 'uploaded_by', 'created_at']
         read_only_fields = ['uploaded_by', 'created_at']
+
+class JuryMemberSerializer(serializers.ModelSerializer):
+    user_name = serializers.SerializerMethodField()
+    role_name = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = JuryMember
+        fields = ['id', 'user', 'user_name', 'role', 'role_name', 'is_president', 'notes']
+    
+    def get_user_name(self, obj):
+        return obj.user.get_full_name() or obj.user.username
+        
+    def get_role_name(self, obj):
+        return obj.role.name if obj.role else None
+        
+class DefenseSerializer(serializers.ModelSerializer):
+    jury_members = JuryMemberSerializer(many=True, read_only=True)
+    team = TeamSerializer
+    class Meta:
+        model = Defense
+        fields = '__all__'
+        read_only_fields = ['id', 'created_at', 'updated_at']
+        
+class DefenseDetailSerializer(serializers.ModelSerializer):
+    """Serializer for detailed defense information"""
+    team = TeamSerializer(read_only=True)
+    theme = ThemeOutputSerializer(read_only=True)
+    jury_members = JuryMemberSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Defense
+        fields = [
+            'id', 'title', 'theme_assignment', 'team', 'theme',
+            'jury_members', 'date', 'start_time', 'end_time',
+            'location', 'room', 'defense_uri', 'report_uri',
+            'specifications_document_uri', 'description',
+            'status', 'result', 'grade', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+        
+        
+class ProjectListSerializer(serializers.ModelSerializer):
+    """
+    Comprehensive serializer for projects (theme assignments) that combines
+    all related information using existing serializers.
+    """
+    # Use your existing serializers (assuming they're already defined)
+    theme = ThemeSerializer(read_only=True)
+    team = TeamSerializer(read_only=True)
+    assigned_by = UserSerializer(read_only=True)
+    
+    # Add computed fields for quick access to important information
+    theme_title = serializers.CharField(source='theme.title', read_only=True)
+    team_name = serializers.CharField(source='team.name', read_only=True)
+    academic_year = serializers.CharField(source='team.academic_year', read_only=True)
+    
+    # Get team owner for quick access
+    team_owner = serializers.SerializerMethodField()
+    
+    # Get team members with roles
+    team_members = serializers.SerializerMethodField()
+    
+    # Get theme supervisors
+    supervisors = serializers.SerializerMethodField()
+    
+    # Get project artifacts
+    uploads = serializers.SerializerMethodField()
+    meetings = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = ThemeAssignment
+        fields = [
+            'id', 'theme', 'team', 'assigned_by',
+            'theme_title', 'team_name', 'academic_year',
+            'team_owner', 'team_members', 'supervisors',
+            'uploads', 'meetings',
+            'created_at', 'updated_at'
+        ]
+    
+    def get_team_owner(self, obj):
+        """Get the team owner"""
+        owner_membership = TeamMembership.objects.filter(
+            team=obj.team, 
+            role=TeamMembership.ROLE_OWNER
+        ).select_related('user').first()
+        
+        if owner_membership:
+            # Use your existing UserSerializer
+            return UserSerializer(owner_membership.user).data
+        return None
+    
+    def get_team_members(self, obj):
+        """Get all team members with roles"""
+        memberships = TeamMembership.objects.filter(
+            team=obj.team
+        ).select_related('user')
+        
+        # Use your existing TeamMembershipSerializer
+        return TeamMembershipSerializer(memberships, many=True).data
+    
+    def get_supervisors(self, obj):
+        """Get theme proposer and co-supervisors"""
+        supervisors = {
+            'proposer': UserSerializer(obj.theme.proposed_by).data,
+            'co_supervisors': UserSerializer(obj.theme.co_supervisors.all(), many=True).data
+        }
+        return supervisors
+    
+    def get_uploads(self, obj):
+        """Get team uploads"""
+        # Use your existing UploadSerializer
+        return UploadSerializer(obj.team.uploads.all(), many=True).data
+    
+    def get_meetings(self, obj):
+        """Get team meetings"""
+        # Use your existing MeetingSerializer
+        return MeetingDetailSerializer(obj.team.meetings.all(), many=True).data
+

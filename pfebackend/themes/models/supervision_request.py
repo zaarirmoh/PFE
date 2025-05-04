@@ -100,8 +100,11 @@ class ThemeSupervisionRequest(TeamRequestStatusMixin, TimeStampedModel):
         # Get the supervisor (theme proposer)
         supervisor = self.theme.proposed_by
         
+        title = "{self.team.name} - {self.theme.title}"
+        
         # Create the theme assignment
         ThemeAssignment.objects.create(
+            title=title,
             team=self.team,
             theme=self.theme,
             assigned_by=supervisor

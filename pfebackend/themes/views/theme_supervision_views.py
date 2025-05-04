@@ -13,14 +13,27 @@ from themes.serializers import (
 from teams.permissions import IsTeamOwner, IsTeamMember
 from themes.permissions import IsThemeSupervisor
 from common.pagination import StaticPagination
+from themes.filters import ThemeSupervisionRequestFilter
+from django_filters.rest_framework import DjangoFilterBackend
+
 
 class TeamSupervisionRequestListView(generics.ListAPIView):
     """
     View to get supervision requests made by a team
+    
+    Filter parameters:
+    - status: Filter by exact status (PENDING, ACCEPTED, DECLINED)
+    - status_in: Filter by multiple statuses (comma-separated)
+    - theme: Filter by theme ID
+    - invitee: Filter by invitee user ID
+    - created_after: Filter by creation date (greater than or equal)
+    - created_before: Filter by creation date (less than or equal)
     """
     serializer_class = ThemeSupervisionRequestSerializer
     permission_classes = [permissions.IsAuthenticated, IsTeamMember]
     pagination_class = StaticPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ThemeSupervisionRequestFilter
     
     def get_queryset(self):
         team_id = self.kwargs.get('team_id')
@@ -36,10 +49,23 @@ class TeamSupervisionRequestListView(generics.ListAPIView):
 class UserSupervisionRequestListView(generics.ListAPIView):
     """
     View to get supervision requests for a user (as supervisor)
+    
+    Filter parameters:
+    - status: Filter by exact status (PENDING, ACCEPTED, DECLINED)
+    - status_in: Filter by multiple statuses (comma-separated)
+    - team: Filter by team ID
+    - theme: Filter by theme ID
+    - requester: Filter by requester user ID
+    - academic_year: Filter by theme's academic year
+    - created_after: Filter by creation date (greater than or equal)
+    - created_before: Filter by creation date (less than or equal)
     """
     serializer_class = ThemeSupervisionRequestSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StaticPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ThemeSupervisionRequestFilter
+
     
     # def get_queryset(self):
     #     return ThemeSupervisionService.get_user_pending_supervision_requests(self.request.user.student)

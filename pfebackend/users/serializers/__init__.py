@@ -1,5 +1,5 @@
 from .user import CustomUserSerializer, CustomUserCreateSerializer
-from .student import StudentSerializer
+from .student import StudentSerializer, StudentSkillSerializer
 from .teacher import TeacherSerializer
 from .administrator import AdministratorSerializer
 from .base import BaseProfileSerializer
@@ -19,4 +19,5 @@ __all__ = [
     'TeacherSerializer',
     'AdministratorSerializer',
     'ExternalUserSerializer',
+    'StudentSkillSerializer',
 ]

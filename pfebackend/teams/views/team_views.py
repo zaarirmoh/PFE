@@ -42,6 +42,7 @@ class TeamListCreateView(ListCreateAPIView):
         - `has_capacity` - Teams with capacity for more members (true/false)
         - `is_owner` - Teams where current user is the owner (true/false)
         - `match_student_profile` - Teams matching current user's academic year and program (true/false)
+        - `is_supervisor` - Teams where current teacher is a supervisor (true/false)
     
     - Member count filters:
         - `min_members` - Teams with at least this many members
@@ -85,11 +86,10 @@ class TeamListCreateView(ListCreateAPIView):
     def perform_create(self, serializer):
         """Create a new team with the current user as owner"""
         try:
-            generated_name = str(uuid.uuid4())
+            # generated_name = str(uuid.uuid4())
                 
             # Use TeamService to create the team
-            team = TeamService.create_team(
-                name=generated_name,
+            team = TeamService.create_team_with_auto_name(
                 description=serializer.validated_data.get('description', ''),
                 owner=self.request.user
             )

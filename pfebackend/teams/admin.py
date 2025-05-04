@@ -29,7 +29,7 @@ class TeamAdmin(ModelAdmin):
     - Team members displayed as read-only inline items
     """
     # Fields to display in the list view
-    list_display = ('academic_year', 'current_member_count', 'maximum_members', 'is_verified')
+    list_display = ('name', 'academic_year', 'current_member_count', 'maximum_members', 'is_verified')
     
     # Fields to filter by in the sidebar
     list_filter = ('is_verified', 'academic_year')

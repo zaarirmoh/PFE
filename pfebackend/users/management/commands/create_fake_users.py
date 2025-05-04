@@ -16,7 +16,7 @@ class Command(BaseCommand):
         parser.add_argument('--externals', type=int, default=5, help='Number of external users to create')
         parser.add_argument('--password', type=str, default='zaarirmoh', help='Password for all created users')
 
-    def handle(self, *args, **kwargs):
+    def handle(self, **kwargs):
         fake = Faker()
         
         # Get command parameters

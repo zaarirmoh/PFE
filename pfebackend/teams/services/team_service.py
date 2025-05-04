@@ -5,6 +5,49 @@ from django.core.exceptions import ValidationError
 class TeamService:
     """Service class for team-related operations"""
     
+    @classmethod
+    def create_team_with_auto_name(cls, description, owner):
+        """
+        Creates a team with automatically generated name in the format 'Groupe X'
+        
+        Args:
+            description: Team description
+            owner: The user who will own the team
+            
+        Returns:
+            The created team instance
+        """
+        # Get the highest team number from existing teams with "Groupe" prefix
+        # Filter by owner's academic year to ensure numbers are unique per year
+        student = owner.student
+        academic_year = student.current_year
+        
+        last_team = Team.objects.filter(
+            name__startswith='Groupe ',
+            academic_year=academic_year
+        ).order_by('-name').first()
+        
+        next_number = 1  # Default to 1 if no teams exist
+        if last_team:
+            try:
+                # Extract the number from the last team name and increment
+                last_number = int(last_team.name.replace('Groupe ', ''))
+                next_number = last_number + 1
+            except (ValueError, AttributeError):
+                # If parsing fails, default to 1
+                pass
+        
+        # Generate the team name with the next number
+        generated_name = f"Groupe {next_number}"
+        
+        # Use the existing create_team method
+        return cls.create_team(
+            name=generated_name,
+            description=description,
+            owner=owner
+        )
+
+    
     @staticmethod
     def create_team(name, description, owner):
         """
