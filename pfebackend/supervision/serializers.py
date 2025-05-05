@@ -12,6 +12,8 @@ from themes.models import ThemeAssignment
 from .models import Defense, JuryMember
 from teams.serializers import TeamSerializer
 from themes.serializers import ThemeOutputSerializer
+from .models import Upload, ResourceComment
+from users.serializers import CustomUserSerializer
 
 class MeetingListSerializer(serializers.ModelSerializer):
     """Serializer for listing meetings"""
@@ -95,13 +97,60 @@ class MeetingStatusUpdateSerializer(serializers.ModelSerializer):
     
 
 
-from .models import Upload
+class ResourceCommentSerializer(serializers.ModelSerializer):
+    author = CustomUserSerializer(read_only=True)
+
+    class Meta:
+        model = ResourceComment
+        fields = ['id', 'content', 'author', 'created_at', 'updated_at']
+        read_only_fields = ['author', 'created_at', 'updated_at']
+
 
 class UploadSerializer(serializers.ModelSerializer):
+    """
+    Serializer for file uploads.
+    Includes commenting functionality and filtering options.
+    """
+    uploaded_by = CustomUserSerializer(read_only=True)
+    comments = ResourceCommentSerializer(many=True, read_only=True)
+
     class Meta:
         model = Upload
-        fields = ['id', 'team', 'title', 'url', 'uploaded_by', 'created_at']
+        fields = ['id', 'team', 'title', 'url', 'uploaded_by', 'created_at', 'comments']
         read_only_fields = ['uploaded_by', 'created_at']
+        swagger_schema_fields = {
+            "title": "Upload",
+            "description": "A file upload with associated comments",
+            "properties": {
+                "team": {
+                    "type": "integer",
+                    "description": "ID of the team this upload belongs to"
+                },
+                "title": {
+                    "type": "string", 
+                    "description": "Title of the uploaded file"
+                },
+                "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "URL where the file can be accessed"
+                },
+                "comments": {
+                    "type": "array",
+                    "description": "List of comments on this upload",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {"type": "integer"},
+                            "content": {"type": "string"},
+                            "author": {"type": "object"},
+                            "created_at": {"type": "string", "format": "date-time"}
+                        }
+                    }
+                }
+            }
+        }
+
 
 class JuryMemberSerializer(serializers.ModelSerializer):
     user_name = serializers.SerializerMethodField()
@@ -148,7 +197,6 @@ class ProjectListSerializer(serializers.ModelSerializer):
     Comprehensive serializer for projects (theme assignments) that combines
     all related information using existing serializers.
     """
-    # Use your existing serializers (assuming they're already defined)
     theme = ThemeSerializer(read_only=True)
     team = TeamSerializer(read_only=True)
     assigned_by = UserSerializer(read_only=True)
