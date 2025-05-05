@@ -7,6 +7,9 @@ from unfold.decorators import action
 from django.contrib import messages
 from django.db import transaction
 from django.shortcuts import redirect
+from .admin_filters import AcademicYearFilter
+from django.urls import reverse_lazy, path
+from django.utils.translation import gettext_lazy as _
 from .admin_forms import CustomUserChangeForm, CustomUserCreationForm
 from .admin_inlines import (
     StudentProfileInline,
@@ -16,9 +19,11 @@ from .admin_inlines import (
 )
 from users.models import User, Student, StudentSkill
 from users.serializers.base import BaseProfileSerializer
-from django.urls import reverse_lazy
-from django.utils.translation import gettext_lazy as _
-from .admin_filters import *
+from django.template.response import TemplateResponse
+from ..student_importer_test_servic import import_students_from_excel
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+import os
 
 # Dictionary mapping user types to their corresponding inline classes
 USER_TYPE_INLINES = {
@@ -120,6 +125,55 @@ class CustomUserAdmin(BaseUserAdmin, ModelAdmin):
         """Handle changing a user's type by creating the new profile if needed."""
         # Create new profile for the user's new type
         self._create_profile(user)
+        
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                'import-students/',
+                self.admin_site.admin_view(self.import_students_view),
+                name='users_user_import_students',
+            ),
+        ]
+        return custom_urls + urls
+
+    def import_students_view(self, request):
+        if request.method == "POST":
+            excel_file = request.FILES.get('excel_file')
+            academic_year = request.POST.get('academic_year')
+            
+            if excel_file and academic_year:
+                # Save the file temporarily
+                file_path = default_storage.save(f'temp/students_import/{excel_file.name}', ContentFile(excel_file.read()))
+                try:
+                    # Call the import function
+                    import_students_from_excel(default_storage.path(file_path), academic_year)
+                    messages.success(request, f"Successfully imported students for academic year {academic_year}")
+                except Exception as e:
+                    messages.error(request, f"Error importing students: {str(e)}")
+                finally:
+                    # Clean up the temporary file
+                    if default_storage.exists(file_path):
+                        default_storage.delete(file_path)
+            else:
+                messages.error(request, "Please provide both an Excel file and academic year")
+            
+            return redirect("admin:users_user_changelist")
+
+        # Get available academic years from the ACADEMIC_YEAR_TRANSITIONS
+        from ..student_importer_test_servic import ACADEMIC_YEAR_TRANSITIONS
+        academic_years = list(ACADEMIC_YEAR_TRANSITIONS.keys())
+        
+        context = {
+            'title': 'Import Students',
+            'academic_years': academic_years,
+            **self.admin_site.each_context(request),
+        }
+        return TemplateResponse(request, "admin/users/user/import_students.html", context)
+
+    @action(description=_("Import Students from Excel"), icon="upload")
+    def import_students_action(self, request):
+        return redirect('admin:users_user_import_students')
         
     @action(description=_("action"), icon="hub")
     def changelist_action1(self, request):
