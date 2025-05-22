@@ -42,7 +42,7 @@ class TeamFilter(filters.FilterSet):
             'name', 'description', 'academic_year', 'is_verified', 
             'created_after', 'created_before', 'updated_after', 'updated_before', 
             'is_member', 'has_capacity', 'is_owner', 'match_student_profile', 
-            'min_members', 'max_members', 'maximum_size'
+            'min_members', 'max_members', 'maximum_size', 'is_supervisor'
         ]
     
     def filter_is_member(self, queryset, name, value):
