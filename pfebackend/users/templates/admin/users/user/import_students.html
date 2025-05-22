@@ -1,0 +1,83 @@
+{% extends "unfold/base_site.html" %} {% load i18n %} {% block content %}
+<div class="unfold-container">
+  <div class="unfold-block unfold-box">
+    <form method="post" enctype="multipart/form-data" class="unfold-form">
+      {% csrf_token %}
+
+      <div class="unfold-fieldset">
+        <div class="unfold-fieldset-row">
+          <div class="unfold-field">
+            <label class="unfold-label" for="academic_year"
+              >Academic Year:</label
+            >
+            <div class="unfold-select-wrapper">
+              <select
+                name="academic_year"
+                id="academic_year"
+                class="unfold-select"
+                required
+              >
+                <option value="">Select Academic Year</option>
+                {% for year in academic_years %}
+                <option value="{{ year }}">{{ year }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="unfold-fieldset-row">
+          <div class="unfold-field">
+            <label class="unfold-label" for="excel_file">Excel File:</label>
+            <input
+              type="file"
+              name="excel_file"
+              id="excel_file"
+              accept=".xlsx,.xls"
+              required
+              class="unfold-file-input"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="unfold-actions">
+        <button type="submit" class="unfold-button unfold-button-success">
+          <span class="unfold-button-icon material-icons">upload</span>
+          <span class="unfold-button-label">Import Students</span>
+        </button>
+        <a
+          href="{% url 'admin:users_user_changelist' %}"
+          class="unfold-button unfold-button-secondary"
+        >
+          <span class="unfold-button-icon material-icons">arrow_back</span>
+          <span class="unfold-button-label">Back to Users</span>
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <div class="unfold-block unfold-box mt-4">
+    <h3 class="unfold-title text-lg font-medium mb-4">Instructions</h3>
+    <div class="unfold-content">
+      <ul class="list-disc pl-4">
+        <li class="mb-2">
+          The Excel file should have the following columns: 'N° d'inscription',
+          'Nom', 'Prénom', 'Décision'
+        </li>
+        <li class="mb-2">
+          Only students marked as 'Admis(e)' in the 'Décision' column will be
+          promoted to the next year
+        </li>
+        <li class="mb-2">
+          Make sure the Excel file is properly formatted before uploading
+        </li>
+        <li class="mb-2">
+          Student records will be created or updated based on their matricule
+          number
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

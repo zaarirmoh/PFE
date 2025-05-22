@@ -169,12 +169,14 @@ class MeetingViewSet(viewsets.ModelViewSet):
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
         
 
-from .models import Upload
-from .serializers import UploadSerializer
+from .models import Upload, ResourceComment
+from .serializers import UploadSerializer, ResourceCommentSerializer
 from users.permissions import IsTeacher
 from teams.permissions import IsTeamMember
 from rest_framework.exceptions import PermissionDenied
 from teams.models import Team
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 
 def get_supervisors_and_teachers(team_id):
@@ -195,21 +197,41 @@ def notify_upload(user, team_id, upload_title):
             content=f"New resource '{upload_title}' uploaded by {user.username}",
             notification_type="resource_upload"
         )
+
+
 class UploadViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint for managing file uploads.
+
+    list:
+        Get a list of uploads with optional filtering by team
+
+    create:
+        Upload a new file
+
+    retrieve:
+        Get details of a specific upload including comments
+
+    comment:
+        Add a comment to an upload
+    """
     queryset = Upload.objects.all()
     serializer_class = UploadSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['team']
+    search_fields = ['title']
+    ordering_fields = ['created_at', 'title']
+    ordering = ['-created_at']
 
     def get_permissions(self):
         if self.action == 'create':
             return [IsTeamMember()]
-        if self.action in ['list', 'retrieve']:
-            return [IsTeamMember() | IsTeacher()]
+        if self.action in ['list', 'retrieve', 'comment']:
+            return [IsTeamMember() , IsTeacher()]
         return [IsAuthenticated()]
 
-
     def perform_create(self, serializer):
-        
         team_id = self.request.data.get('team')
         upload = serializer.save(
             uploaded_by=self.request.user,
@@ -221,13 +243,52 @@ class UploadViewSet(viewsets.ModelViewSet):
                 "updated_by": self.request.user.id
             }
         )
-
-        # Send notifications to supervisors and teachers
         notify_upload(self.request.user, team_id, upload.title)
 
-       # NotificationService.create_and_send(recipient=,content="New resource uploaded", notification_type="resource_upload")
-        serializer.save(uploaded_by=self.request.user)
+    @swagger_auto_schema(
+        operation_description="Add a comment to an upload",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['content'],
+            properties={
+                'content': openapi.Schema(type=openapi.TYPE_STRING, description='Comment text')
+            }
+        ),
+        responses={
+            201: ResourceCommentSerializer(),
+            400: 'Bad Request - Content is required',
+        }
+    )
+    @action(detail=True, methods=['post'])
+    def comment(self, request, pk=None):
+        """Add a comment to an upload."""
+        upload = self.get_object()
+        if not upload:
+            return Response({'error':'Upload not found'}, status=status.HTTP_404_NOT_FOUND)
+        content = request.data.get('content')
+        
+        if not content:
+            return Response(
+                {'error': 'Comment content is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+        comment = ResourceComment.objects.create(
+            upload=upload,
+            author=request.user,
+            content=content
+        )
+
+        # Notify the upload owner
+        if upload.uploaded_by != request.user:
+            NotificationService.create_and_send(
+                recipient=upload.uploaded_by,
+                content=f"New comment on your upload '{upload.title}' by {request.user.username}",
+                notification_type="resource_comment"
+            )
+        
+        serializer = ResourceCommentSerializer(comment)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ProjectListView(ListAPIView):
