@@ -1,6 +1,6 @@
 from .meeting import Meeting
 from .upload import Upload, ResourceComment
-from .defense import Defense, JuryMember, JuryRole
+from .defense import Defense, JuryMember
 
 
 __all__ = [
@@ -9,5 +9,4 @@ __all__ = [
     'ResourceComment',
     'Defense',
     'JuryMember',
-    'JuryRole'
 ]

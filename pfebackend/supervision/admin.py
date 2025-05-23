@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from notifications.services import NotificationService
-from .models import Defense, JuryMember, JuryRole
+from .models import Defense, JuryMember
 
 class JuryRoleAdmin(ModelAdmin):
     list_display = ['name', 'description']
@@ -15,7 +15,7 @@ class JuryRoleAdmin(ModelAdmin):
 class JuryMemberInline(TabularInline):
     model = JuryMember
     extra = 1
-    autocomplete_fields = ['user', 'role']
+    autocomplete_fields = ['user']
 
 
 class DefenseAdmin(ModelAdmin):
@@ -238,6 +238,6 @@ class MeetingAdmin(ModelAdmin):
         }),
     )
     
-admin.site.register(JuryRole, JuryRoleAdmin)
+# admin.site.register(JuryRole, JuryRoleAdmin)
 admin.site.register(Meeting, MeetingAdmin)
 admin.site.register(Defense, DefenseAdmin)
