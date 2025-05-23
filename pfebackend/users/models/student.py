@@ -71,6 +71,6 @@ class StudentSkill(models.Model):
         return f"{self.name} ({self.proficiency_level})"
     
     class Meta:
-        unique_together = ('student', 'name')
+        # unique_together = ('student', 'name')
         verbose_name = "Student Skill"
         verbose_name_plural = "Student Skills"
