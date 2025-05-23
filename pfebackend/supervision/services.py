@@ -274,7 +274,8 @@ class MeetingService:
                 'name': scheduled_by
             },
             'scheduled_at': meeting.scheduled_at.isoformat(),
-            'location_type': meeting.location_type
+            'location_type': meeting.location_type,
+            'profile_picture': meeting.scheduled_by.profile_picture_url,
         }
         
         # Create action URL for the meeting
@@ -336,7 +337,8 @@ class MeetingService:
             },
             'scheduled_at': meeting.scheduled_at.isoformat(),
             'location_type': meeting.location_type,
-            'event_type': 'meeting_updated'
+            'event_type': 'meeting_updated',
+            'profile_picture': meeting.updated_by.profile_picture_url,
         }
         
         # Create action URL for the meeting
@@ -388,7 +390,8 @@ class MeetingService:
                 'name': cancelled_by
             },
             'scheduled_at': meeting.scheduled_at.isoformat(),
-            'event_type': 'meeting_cancelled'
+            'event_type': 'meeting_cancelled',
+            'profile_picture': meeting.updated_by.profile_picture_url,
         }
         
         # Create action URL for the team page

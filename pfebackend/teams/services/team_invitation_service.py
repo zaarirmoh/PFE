@@ -61,10 +61,11 @@ class TeamInvitationService:
                     'invitation_id': invitation.id,
                     'team_id': team.id,
                     # 'team_name': team.name,
+                    'profile_picture': inviter.profile_picture_url,
                     'inviter': {
                         'id': inviter.id,
                         'username': inviter.username,
-                        'name': inviter_name
+                        'name': inviter_name,
                     }
                 }
                 
@@ -141,6 +142,7 @@ class TeamInvitationService:
                                 'team_id': team.id,
                                 'member_id': user.id,
                                 'member_name': member_name,
+                                'profile_picture': user.profile_picture_url,
                                 'event_type': 'invitation_accepted'
                             }
                         )
@@ -173,7 +175,8 @@ class TeamInvitationService:
                         priority='low',
                         metadata={
                             'team_id': team.id,
-                            'event_type': 'invitation_declined'
+                            'event_type': 'invitation_declined',
+                            'profile_picture': user.profile_picture_url,
                         }
                     )
                     

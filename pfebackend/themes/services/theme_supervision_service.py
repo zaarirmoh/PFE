@@ -99,6 +99,7 @@ class ThemeSupervisionService:
                     'theme_title': theme.title,
                     'team_id': team.id,
                     'team_name': team.name,
+                    'profile_picture': requester.profile_picture_url,
                     'requester': {
                         'id': requester.id,
                         'username': requester.username,
@@ -207,6 +208,7 @@ class ThemeSupervisionService:
                                 'theme_id': theme.id,
                                 'theme_title': theme.title,
                                 'supervisor_name': supervisor_name,
+                                'profile_picture': user.profile_picture_url,
                                 'event_type': 'supervision_request_accepted',
                                 'response_message': message
                             }
@@ -226,6 +228,7 @@ class ThemeSupervisionService:
                                     'team_id': team.id,
                                     'theme_id': theme.id,
                                     'theme_title': theme.title,
+                                    'profile_picture': user.profile_picture_url,
                                     'supervisor_name': supervisor_name,
                                     'event_type': 'theme_assigned'
                                 }
@@ -258,6 +261,7 @@ class ThemeSupervisionService:
                             'theme_id': theme.id,
                             'theme_title': theme.title,
                             'supervisor_name': supervisor_name,
+                            'profile_picture': user.profile_picture_url,
                             'event_type': 'supervision_request_declined',
                             'response_message': message
                         }

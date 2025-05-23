@@ -195,7 +195,10 @@ def notify_upload(user, team_id, upload_title):
         NotificationService.create_and_send(
             recipient=recipient.user,
             content=f"New resource '{upload_title}' uploaded by {user.username}",
-            notification_type="resource_upload"
+            notification_type="resource_upload",
+            metadata={
+                "profile_picture": user.profile_picture_url,
+            },
         )
 
 
@@ -284,7 +287,10 @@ class UploadViewSet(viewsets.ModelViewSet):
             NotificationService.create_and_send(
                 recipient=upload.uploaded_by,
                 content=f"New comment on your upload '{upload.title}' by {request.user.username}",
-                notification_type="resource_comment"
+                notification_type="resource_comment",
+                metadata={
+                    "profile_picture": request.user.profile_picture_url,
+                }
             )
         
         serializer = ResourceCommentSerializer(comment)

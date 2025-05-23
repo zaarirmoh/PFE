@@ -76,6 +76,7 @@ class TeamMembershipCreateView(CreateAPIView):
                     'team_id': team.id,
                     'team_name': team.name,
                     'role': membership.role,
+                    'profile_picture': self.request.user.profile_picture_url,
                     'event_type': 'added_to_team'
                 }
             )
@@ -156,6 +157,7 @@ class TeamMembershipDetailView(RetrieveUpdateDestroyAPIView):
             metadata={
                 'team_id': team.id,
                 'team_name': team.name,
+                'profile_picture': self.request.user.profile_picture_url,
                 'event_type': 'removed_from_team'
             }
         )

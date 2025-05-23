@@ -73,11 +73,11 @@ class TeamJoinRequestService:
                         'join_request_id': join_request.id,
                         'team_id': team.id,
                         'team_name': team.name,
+                        'profile_picture': requester.profile_picture_url,
                         'requester': {
                             'id': requester.id,
                             'username': requester.username,
                             'name': requester_name,
-                            'profile_picture': requester.profile_picture_url,
                         }
                     }
                     
@@ -149,6 +149,7 @@ class TeamJoinRequestService:
                         from notifications.services import NotificationService
                         
                         owner_name = user.get_full_name() or user.username
+                        owner_profile_picture = user.profile_picture_url
                         
                         NotificationService.create_and_send(
                             recipient=requester,
@@ -160,6 +161,7 @@ class TeamJoinRequestService:
                             metadata={
                                 'team_id': team.id,
                                 'owner_name': owner_name,
+                                'profile_picture': owner_profile_picture,
                                 'event_type': 'join_request_accepted'
                             }
                         )
@@ -185,6 +187,7 @@ class TeamJoinRequestService:
                     from notifications.services import NotificationService
                     
                     owner_name = user.get_full_name() or user.username
+                    owner_profile_picture = user.profile_picture_url
                     
                     NotificationService.create_and_send(
                         recipient=requester,
@@ -196,7 +199,8 @@ class TeamJoinRequestService:
                         metadata={
                             'team_id': team.id,
                             'owner_name': owner_name,
-                            'event_type': 'join_request_declined'
+                            'event_type': 'join_request_declined',
+                            'profile_picture': owner_profile_picture
                         }
                     )
                     
@@ -290,7 +294,8 @@ class TeamJoinRequestService:
                     priority='low',
                     metadata={
                         'team_id': team.id,
-                        'event_type': 'join_request_cancelled'
+                        'event_type': 'join_request_cancelled',
+                        'profile_picture': user.profile_picture_url,
                     }
                 )
             
