@@ -30,14 +30,14 @@ version: "3.9"
 
 services:
   backend:
-    image: "zaarirmoh/pfe:corrected"
+    image: "zaarirmoh/pfe:latest"
     container_name: pfe_backend
     depends_on:
       - redis
     ports:
       - "8000:8000"
-    volumes:
-      - sqlite_data:/app
+    # volumes:
+    #   - sqlite_data:/app
     environment:
       - DEBUG=True
     command: >
@@ -58,35 +58,35 @@ services:
     ports:
       - "6379:6379"
 
-  celery:
-    image: "zaarirmoh/pfe:corrected"
-    container_name: pfe_celery
-    restart: always
-    depends_on:
-      - redis
-      - backend
-    volumes:
-      - sqlite_data:/app
-    command: >
-      sh -c "
-        sleep 10 &&
-        celery -A pfebackend worker --loglevel=info
-      "
+#   celery:
+#     image: "zaarirmoh/pfe:corrected"
+#     container_name: pfe_celery
+#     restart: always
+#     depends_on:
+#       - redis
+#       - backend
+#     volumes:
+#       - sqlite_data:/app
+#     command: >
+#       sh -c "
+#         sleep 10 &&
+#         celery -A pfebackend worker --loglevel=info
+#       "
 
-  celery-beat:
-    image: "zaarirmoh/pfe:corrected"
-    container_name: pfe_celery_beat
-    restart: always
-    depends_on:
-      - redis
-      - backend
-    volumes:
-      - sqlite_data:/app
-    command: >
-      sh -c "
-        sleep 15 &&
-        celery -A pfebackend beat --loglevel=info
-      "
+#   celery-beat:
+#     image: "zaarirmoh/pfe:corrected"
+#     container_name: pfe_celery_beat
+#     restart: always
+#     depends_on:
+#       - redis
+#       - backend
+#     volumes:
+#       - sqlite_data:/app
+#     command: >
+#       sh -c "
+#         sleep 15 &&
+#         celery -A pfebackend beat --loglevel=info
+#       "
 
-volumes:
-  sqlite_data:
+# volumes:
+#   sqlite_data:
