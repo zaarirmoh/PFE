@@ -203,7 +203,8 @@ class TeamService:
                 metadata={
                     'team_id': team.id,
                     'member_id': new_member.id,
-                    'event_type': 'member_added'
+                    'event_type': 'member_added',
+                    'profile_picture': new_member.profile_picture_url
                 }
             )
             
@@ -262,7 +263,8 @@ class TeamService:
                 priority='low',
                 metadata={
                     'team_id': team.id,
-                    'event_type': 'member_removed'
+                    'event_type': 'member_removed',
+                    'profile_picture': member_to_remove.profile_picture_url
                 }
             )
     
@@ -327,7 +329,8 @@ class TeamService:
             priority='medium',
             metadata={
                 'team_id': team.id,
-                'event_type': 'ownership_transferred'
+                'event_type': 'ownership_transferred',
+                'profile_picture': new_owner.profile_picture_url
             }
         )
     

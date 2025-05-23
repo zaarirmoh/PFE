@@ -19,12 +19,8 @@ class TimelineAdmin(ModelAdmin):
     actions = ['trigger_auto_team_assignment']
     
     fieldsets = (
-        (None, {
+        ('Timeline', {
             'fields': ('slug', 'name', 'description')
-        }),
-        ('Timeline Type', {
-            'fields': ('timeline_type', 'academic_year'),
-            'description': 'Set the type of timeline and which academic year it applies to.'
         }),
         ('Timing', {
             'fields': ('start_date', 'end_date', 'is_active'),

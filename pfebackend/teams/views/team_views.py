@@ -10,7 +10,6 @@ from teams.models import Team
 from teams.serializers import TeamSerializer
 from teams.permissions import IsTeamMember, IsTeamOwner
 from teams.services import TeamService
-from notifications.services import NotificationService
 from common.pagination import StaticPagination
 from users.permissions import IsStudent
 from django_filters.rest_framework import DjangoFilterBackend

@@ -17,7 +17,7 @@ from .admin_inlines import (
     AdministratorProfileInline,
     ExternalUserProfileInline,
 )
-from users.models import User, Student, StudentSkill
+from users.models import User, Student, StudentSkill, ExcelUpload
 from users.serializers.base import BaseProfileSerializer
 from django.template.response import TemplateResponse
 from ..student_importer_test_servic import import_students_from_excel
@@ -37,7 +37,7 @@ class CustomUserAdmin(BaseUserAdmin, ModelAdmin):
     form = CustomUserChangeForm
     add_form = CustomUserCreationForm
     
-    list_display = ('email', 'username', 'user_type', 'is_active', 'is_staff', 'is_superuser')
+    list_display = ('email', 'username')
     exclude = ('password',)
     list_filter = ('user_type', AcademicYearFilter)
     
@@ -51,21 +51,6 @@ class CustomUserAdmin(BaseUserAdmin, ModelAdmin):
             {
                 'fields': ('first_name', 'last_name'),
                 'classes': ['callapse'],
-            }
-        ),
-        (
-            'User Type',
-            {
-                'fields': ('user_type',),
-                'classes': ['callapse'],
-            }
-        ),
-        (
-            'Permissions',
-            {
-                'fields': ('is_active', 'is_staff', 'is_superuser'),
-                'classes': ['callapse'],  # Changed from 'callapse' to 'tab'
-                'description': 'Manage user permissions and access levels'
             }
         ),
     )
@@ -184,5 +169,6 @@ class CustomUserAdmin(BaseUserAdmin, ModelAdmin):
     
 # Register your models here.
 admin.site.register(User, CustomUserAdmin)
-admin.site.register(StudentSkill, ModelAdmin)
+# admin.site.register(StudentSkill, ModelAdmin)
+admin.site.register(ExcelUpload, ModelAdmin)
 admin.site.unregister(Group)

@@ -6,3 +6,7 @@ db.sqlite3
 pfediagrams
 # migrations
 media
+# Ignore all migration files
+migrations
+# But do not ignore __init__.py in migrations directories
+!*/migrations/__init__.py

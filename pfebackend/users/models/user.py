@@ -63,8 +63,8 @@ class User(AbstractBaseUser):
     postal_code = models.CharField(max_length=20, blank=True, null=True)
     
     # Contact Information
-    phone_number = PhoneNumberField(
-        unique=True, 
+    phone_number = models.IntegerField(
+        unique=False, 
         blank=True, 
         null=True, 
         help_text="Enter a valid phone number with country code"
