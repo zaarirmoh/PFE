@@ -239,5 +239,5 @@ class MeetingAdmin(ModelAdmin):
     )
     
 # admin.site.register(JuryRole, JuryRoleAdmin)
-admin.site.register(Meeting, MeetingAdmin)
+# admin.site.register(Meeting, MeetingAdmin)
 admin.site.register(Defense, DefenseAdmin)

@@ -121,5 +121,5 @@ class TeamSettingsAdmin(ModelAdmin):
 
 
 admin.site.register(Team, TeamAdmin)
-admin.site.register(TeamSettings, TeamSettingsAdmin)
+# admin.site.register(TeamSettings, TeamSettingsAdmin)
 # admin.site.register(TeamMembership)

@@ -154,17 +154,14 @@ class UploadSerializer(serializers.ModelSerializer):
 
 class JuryMemberSerializer(serializers.ModelSerializer):
     user_name = serializers.SerializerMethodField()
-    role_name = serializers.SerializerMethodField()
     
     class Meta:
         model = JuryMember
-        fields = ['id', 'user', 'user_name', 'role', 'role_name', 'is_president', 'notes']
+        fields = ['id', 'user', 'user_name', 'is_president', 'notes']
     
     def get_user_name(self, obj):
         return obj.user.get_full_name() or obj.user.username
         
-    def get_role_name(self, obj):
-        return obj.role.name if obj.role else None
         
 class DefenseSerializer(serializers.ModelSerializer):
     jury_members = JuryMemberSerializer(many=True, read_only=True)

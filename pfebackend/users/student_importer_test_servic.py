@@ -58,7 +58,7 @@ import pandas as pd
 from django.utils.text import slugify
 from django.db import transaction
 
-def create_students_from_excel(file_path: str, academic_year: str, enrollment_year: int):
+def create_students_from_excel(file_path: str, academic_year: str):
     print("Creating students from Excel file...")
     """
     Creates new student users from an Excel file and assigns them to the given academic year.
@@ -117,7 +117,7 @@ def create_students_from_excel(file_path: str, academic_year: str, enrollment_ye
             Student.objects.create(
                 user=user,
                 matricule=matricule,
-                enrollment_year=enrollment_year,
+                # enrollment_year=enrollment_year,
                 current_year=academic_year,
                 academic_status='active'
             )
