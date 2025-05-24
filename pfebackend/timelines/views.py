@@ -77,7 +77,7 @@ class MyTimelinesView(ListAPIView):
     Returns timelines matching the student's academic year.
     """
     serializer_class = TimelineSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsStudent]
     
     @swagger_auto_schema(
         responses={

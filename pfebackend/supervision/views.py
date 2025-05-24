@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.generics import ListAPIView
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Q
@@ -340,7 +340,7 @@ class ProjectListView(ListAPIView):
     - Scheduled meetings
     """
     serializer_class = ProjectListSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     pagination_class = StaticPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = ProjectListFilter
