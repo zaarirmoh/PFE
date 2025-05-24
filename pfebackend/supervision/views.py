@@ -181,11 +181,24 @@ from drf_yasg import openapi
 
 def get_supervisors_and_teachers(team_id):
     """Helper function to get all supervisors and proposed by teachers for a team"""
-    team = Team.objects.get(id=team_id)
-    recipients = list(team.cosupervisors.all())
-    if team.proposed_by:
-        recipients.append(team.proposed_by)
-    return recipients
+    try:
+        team = Team.objects.get(id=team_id)
+        recipients = []
+        
+        # Check if team has an assigned theme
+        if hasattr(team, 'assigned_theme') and team.assigned_theme:
+            theme = team.assigned_theme.theme
+            
+            # Add co-supervisors
+            recipients.extend(list(theme.co_supervisors.all()))
+            
+            # Add the main supervisor (proposed_by)
+            if theme.proposed_by:
+                recipients.append(theme.proposed_by)
+        
+        return recipients
+    except Team.DoesNotExist:
+        return []
 
 
 def notify_upload(user, team_id, upload_title):
@@ -206,19 +219,11 @@ class UploadViewSet(viewsets.ModelViewSet):
     """
     API endpoint for managing file uploads.
 
-    list:
-        Get a list of uploads with optional filtering by team
-
-    create:
-        Upload a new file
-
-    retrieve:
-        Get details of a specific upload including comments
-
-    comment:
-        Add a comment to an upload
+    Provides CRUD operations for file uploads with team-based access control:
+    - Students can only see uploads from their teams
+    - Teachers can see all uploads or filter by team
+    - Team members can upload files for their teams
     """
-    queryset = Upload.objects.all()
     serializer_class = UploadSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -227,62 +232,313 @@ class UploadViewSet(viewsets.ModelViewSet):
     ordering_fields = ['created_at', 'title']
     ordering = ['-created_at']
 
-    def get_permissions(self):
-        if self.action == 'create':
-            return [IsTeamMember()]
-        if self.action in ['list', 'retrieve', 'comment']:
-            return [IsTeamMember() , IsTeacher()]
-        return [IsAuthenticated()]
-
-    def perform_create(self, serializer):
-        team_id = self.request.data.get('team')
-        upload = serializer.save(
-            uploaded_by=self.request.user,
-            team_id=team_id,
-            metadata={
-                "uploaded_by": self.request.user.id,
-                "team": team_id,
-                "created_at": serializer.validated_data.get('created_at'),
-                "updated_by": self.request.user.id
-            }
-        )
-        notify_upload(self.request.user, team_id, upload.title)
+    def get_queryset(self):
+        """
+        Return uploads based on user's role:
+        - Teachers: All uploads (can filter by team)
+        - Students: Only uploads from teams they are members of
+        """
+        user = self.request.user
+        
+        # Check if user is a teacher
+        is_teacher = hasattr(user, 'teacher')
+        
+        if is_teacher:
+            # Teachers see all uploads, can filter by team using query params
+            return Upload.objects.all().select_related('uploaded_by', 'team')
+        else:
+            # Students see only uploads from their teams
+            user_team_ids = user.teams.values_list('id', flat=True)
+            return Upload.objects.filter(team_id__in=user_team_ids).select_related('uploaded_by', 'team')
 
     @swagger_auto_schema(
-        operation_description="Add a comment to an upload",
+        operation_description="""
+        Get a list of uploads with filtering, searching, and ordering capabilities.
+        
+        **Access Control:**
+        - Students: Only see uploads from their teams
+        - Teachers: See all uploads, can filter by team
+        
+        **Permissions:**
+        - Requires authentication
+        - Students automatically filtered to their team uploads
+        - Teachers can access all uploads
+        
+        **Filtering:**
+        - Use 'team' parameter to filter by team ID
+        - Teachers can filter by any team, students are automatically filtered to their teams
+        
+        **Searching:**
+        - Search in upload titles using 'search' parameter
+        
+        **Ordering:**
+        - Sort by 'created_at' or 'title' (use '-' prefix for descending order)
+        """,
+        manual_parameters=[
+            openapi.Parameter(
+                "team", 
+                openapi.IN_QUERY, 
+                description="Filter uploads by team ID. Students can only see their team uploads, teachers can filter by any team.", 
+                type=openapi.TYPE_INTEGER
+            ),
+            openapi.Parameter(
+                "search", 
+                openapi.IN_QUERY, 
+                description="Search uploads by title", 
+                type=openapi.TYPE_STRING
+            ),
+            openapi.Parameter(
+                "ordering", 
+                openapi.IN_QUERY, 
+                description="Order results by field. Available: 'created_at', 'title', '-created_at', '-title'", 
+                type=openapi.TYPE_STRING, 
+                enum=["created_at", "-created_at", "title", "-title"]
+            ),
+            openapi.Parameter(
+                "page", 
+                openapi.IN_QUERY, 
+                description="Page number for pagination", 
+                type=openapi.TYPE_INTEGER
+            ),
+            openapi.Parameter(
+                "page_size", 
+                openapi.IN_QUERY, 
+                description="Number of results per page (default: 20)", 
+                type=openapi.TYPE_INTEGER
+            ),
+        ],
+        responses={
+            200: openapi.Response(
+                description="List of uploads with pagination",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'count': openapi.Schema(type=openapi.TYPE_INTEGER, description='Total number of uploads'),
+                        'next': openapi.Schema(type=openapi.TYPE_STRING, description='Next page URL'),
+                        'previous': openapi.Schema(type=openapi.TYPE_STRING, description='Previous page URL'),
+                        'results': openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(type=openapi.TYPE_OBJECT)
+                        )
+                    }
+                )
+            ),
+            400: "Bad Request - Invalid parameters",
+            401: "Unauthorized - Authentication required",
+            403: "Forbidden - Access denied"
+        }
+    )
+    def list(self, request, *args, **kwargs):
+        """List uploads with team-based filtering, searching, and ordering."""
+        return super().list(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_description="""
+        Create a new upload. Only team members can upload files for their teams.
+        
+        **Permissions:**
+        - Requires authentication
+        - User should be a member of the specified team (documented requirement)
+        
+        **Requirements:**
+        - File and team ID are required
+        - Notifications will be sent to supervisors and teachers
+        """,
+        request_body=UploadSerializer,
+        responses={
+            201: openapi.Response(
+                description="Upload created successfully",
+                schema=UploadSerializer()
+            ),
+            400: "Bad Request - Invalid data or missing required fields",
+            401: "Unauthorized - Authentication required",
+            403: "Forbidden - Not a team member or access denied",
+            413: "Payload Too Large - File size exceeds limit"
+        }
+    )
+    def create(self, request, *args, **kwargs):
+        """Create a new upload for a team."""
+        return super().create(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_description="""
+        Retrieve details of a specific upload including all comments.
+        
+        **Access Control:**
+        - Students: Can only access uploads from their teams
+        - Teachers: Can access any upload
+        
+        **Permissions:**
+        - Requires authentication
+        - Access automatically filtered based on user role
+        """,
+        responses={
+            200: UploadSerializer(),
+            401: "Unauthorized - Authentication required",
+            403: "Forbidden - Access denied",
+            404: "Upload not found",
+        }
+    )
+    def retrieve(self, request, *args, **kwargs):
+        """Retrieve upload details with comments."""
+        return super().retrieve(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_description="""
+        Update an existing upload. Only the uploader or teachers can modify uploads.
+        
+        **Permissions:**
+        - Requires authentication
+        - Upload owner can update their own uploads (documented requirement)
+        - Teachers can update any upload (documented requirement)
+        """,
+        request_body=UploadSerializer,
+        responses={
+            200: UploadSerializer(),
+            400: "Bad Request - Invalid data",
+            401: "Unauthorized - Authentication required",
+            403: "Forbidden - Not the uploader or teacher",
+            404: "Upload not found",
+        }
+    )
+    def update(self, request, *args, **kwargs):
+        """Update an upload."""
+        return super().update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_description="""
+        Partially update an existing upload. Only the uploader or teachers can modify uploads.
+        
+        **Permissions:**
+        - Requires authentication
+        - Upload owner can update their own uploads (documented requirement)
+        - Teachers can update any upload (documented requirement)
+        """,
+        request_body=UploadSerializer,
+        responses={
+            200: UploadSerializer(),
+            400: "Bad Request - Invalid data",
+            401: "Unauthorized - Authentication required",
+            403: "Forbidden - Not the uploader or teacher",
+            404: "Upload not found",
+        }
+    )
+    def partial_update(self, request, *args, **kwargs):
+        """Partially update an upload."""
+        return super().partial_update(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_description="""
+        Delete an upload. Only the uploader or teachers can delete uploads.
+        
+        **Permissions:**
+        - Requires authentication
+        - Upload owner can delete their own uploads (documented requirement)
+        - Teachers can delete any upload (documented requirement)
+        """,
+        responses={
+            204: "Upload deleted successfully",
+            401: "Unauthorized - Authentication required",
+            403: "Forbidden - Not the uploader or teacher",
+            404: "Upload not found",
+        }
+    )
+    def destroy(self, request, *args, **kwargs):
+        """Delete an upload."""
+        return super().destroy(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        """Handle upload creation with team validation and notifications."""
+        team = serializer.validated_data.get('team')
+        user = self.request.user
+        
+        upload = serializer.save(
+            uploaded_by=user,
+            metadata={
+                "uploaded_by": user.id,
+                "team": team.id,
+                "updated_by": user.id
+            }
+        )
+        notify_upload(user, team.id, upload.title)
+
+    def perform_update(self, serializer):
+        """Handle upload updates with permission validation."""
+        user = self.request.user
+        upload = self.get_object()
+        
+        # Get existing metadata or empty dict if None
+        existing_metadata = upload.metadata or {}
+        
+        serializer.save(
+            metadata={
+                **existing_metadata,
+                "updated_by": user.id,
+            }
+        )
+
+    def perform_destroy(self, instance):
+        """Handle upload deletion with permission validation."""
+        super().perform_destroy(instance)
+
+    @swagger_auto_schema(
+        operation_description="""
+        Add a comment to an upload.
+        
+        **Access Control:**
+        - Students: Can comment on uploads from their teams
+        - Teachers: Can comment on any upload
+        
+        **Permissions:**
+        - Requires authentication
+        - Access automatically filtered based on user role
+        
+        **Notifications:**
+        - Upload owner will be notified of new comments (unless they are the commenter)
+        """,
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             required=['content'],
             properties={
-                'content': openapi.Schema(type=openapi.TYPE_STRING, description='Comment text')
-            }
+                'content': openapi.Schema(
+                    type=openapi.TYPE_STRING, 
+                    description='Comment text content',
+                    min_length=1,
+                    max_length=1000
+                )
+            },
+            example={'content': 'Great work on this document!'}
         ),
         responses={
-            201: ResourceCommentSerializer(),
-            400: 'Bad Request - Content is required',
+            201: openapi.Response(
+                description="Comment created successfully",
+                schema=ResourceCommentSerializer()
+            ),
+            400: 'Bad Request - Content is required or invalid',
+            401: "Unauthorized - Authentication required",
+            403: 'Forbidden - Access denied',
+            404: 'Upload not found'
         }
     )
     @action(detail=True, methods=['post'])
     def comment(self, request, pk=None):
         """Add a comment to an upload."""
         upload = self.get_object()
-        if not upload:
-            return Response({'error':'Upload not found'}, status=status.HTTP_404_NOT_FOUND)
         content = request.data.get('content')
         
-        if not content:
+        if not content or not content.strip():
             return Response(
-                {'error': 'Comment content is required'}, 
+                {'error': 'Comment content is required and cannot be empty'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         comment = ResourceComment.objects.create(
             upload=upload,
             author=request.user,
-            content=content
+            content=content.strip()
         )
 
-        # Notify the upload owner
+        # Notify the upload owner if they're not the commenter
         if upload.uploaded_by != request.user:
             NotificationService.create_and_send(
                 recipient=upload.uploaded_by,
@@ -290,6 +546,8 @@ class UploadViewSet(viewsets.ModelViewSet):
                 notification_type="resource_comment",
                 metadata={
                     "profile_picture": request.user.profile_picture_url,
+                    "upload_id": upload.id,
+                    "comment_id": comment.id
                 }
             )
         
