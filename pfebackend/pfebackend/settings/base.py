@@ -28,7 +28,8 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("redis", 6379)],
+            # "hosts": ["redis://:my_password@localhost:6379/0"],
+            "hosts": [("redis", 6379)], 
         },
     },
 }
@@ -205,11 +206,13 @@ CELERY_TASK_SERIALIZER = 'json'
 # CELERY_BROKER_URL = 'redis://:my_password@localhost:6379/0'
 # CELERY_RESULT_BACKEND = 'redis://:my_password@localhost:6379/0'
 #ta3 docker
-CELERY_BROKER_URL = "redis://redis:6379/0"
-CELERY_RESULT_BACKEND = "redis://redis:6379/1"
+# CELERY_BROKER_URL = "redis://redis:6379/0"
+# CELERY_RESULT_BACKEND = "redis://redis:6379/1"
 
-CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
-
+# Use localhost for local development with password
+# Format: redis://[:password@]host[:port][/db-number]
+CELERY_BROKER_URL = "redis://:my_password@localhost:6379/0"
+CELERY_RESULT_BACKEND = "redis://:my_password@localhost:6379/1"
 
 
 STATIC_URL = '/static/'
