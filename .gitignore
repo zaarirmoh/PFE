@@ -3,7 +3,6 @@ __pycache__
 db.sqlite3
 .env
 .DS_STORE
-pfediagrams
 # migrations
 media
 # Ignore all migration files
