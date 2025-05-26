@@ -15,14 +15,20 @@ class ExcelUpload(TimeStampedModel):
         ('5iasd', '5th Year IASD'),
     )
     
+    DECISION_CHOICES = (
+        ('update', 'Update'),
+        ('create', 'Create'),
+    )
+    
     file = models.FileField(upload_to='uploads/excels/')
     academic_year = models.CharField(max_length=10, choices=ACADEMIC_YEAR_CHOICES, default='2')
+    decision = models.CharField(max_length=10, choices=DECISION_CHOICES, default='update')
     
     
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         from ..student_importer_test_servic import import_students_from_excel, create_students_from_excel
-        if self.academic_year == '1':
+        if self.decision == 'update':
+            import_students_from_excel(file_path=self.file.path, academic_year=self.academic_year)
+        elif self.decision == 'create':
             create_students_from_excel(file_path=self.file.path, academic_year=self.academic_year)
-        else:
-            import_students_from_excel(file_path=self.file.path,academic_year=self.academic_year)

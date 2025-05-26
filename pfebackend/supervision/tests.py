@@ -5,7 +5,7 @@ from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from users.models import User, Teacher, Student
 from teams.models import Team, TeamMembership
-from supervision.models import Meeting, Upload, ResourceComment, Defense, JuryMember, JuryRole
+from supervision.models import Meeting, Upload, ResourceComment, Defense, JuryMember
 from datetime import datetime, timedelta
 
 class MeetingTests(TestCase):
@@ -210,15 +210,7 @@ class DefenseTests(TestCase):
             location='Room A101'
         )
 
-        # Create jury role
-        self.president_role = JuryRole.objects.create(
-            name="President",
-            description="Jury President"
-        )
-        self.supervisor_role = JuryRole.objects.create(
-            name="Supervisor",
-            description="Project Supervisor"
-        )
+        
 
     def test_defense_creation(self):
         """Test defense creation and basic attributes"""

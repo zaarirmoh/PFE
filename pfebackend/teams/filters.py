@@ -100,11 +100,13 @@ class TeamFilter(filters.FilterSet):
             return queryset
 
         user = self.request.user
+        print(f"Filtering teams supervised by user: {user.email}")
 
         # Get all themes the user supervises
         supervised_themes = Theme.objects.filter(
             Q(proposed_by=user) | Q(co_supervisors=user)
         )
+        # print(f"Supervised themes: {[theme.name for theme in supervised_themes]}")
 
         # Filter teams that are assigned to those themes
-        return queryset.filter(themeassignment__theme__in=supervised_themes).distinct()
+        return queryset.filter(assigned_theme__theme__in=supervised_themes).distinct()

@@ -8,9 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from notifications.services import NotificationService
 from .models import Defense, JuryMember
 
-class JuryRoleAdmin(ModelAdmin):
-    list_display = ['name', 'description']
-    search_fields = ['name', 'description']
+
 
 class JuryMemberInline(TabularInline):
     model = JuryMember
@@ -145,7 +143,6 @@ class DefenseAdmin(ModelAdmin):
                     priority="medium",
                     action_url=defense_url,
                     metadata={
-                        "jury_role": jury_member.role.name,
                         "is_president": jury_member.is_president,
                         "defense_id": defense.id,
                         "defense_date": defense.date.isoformat(),
@@ -238,6 +235,5 @@ class MeetingAdmin(ModelAdmin):
         }),
     )
     
-# admin.site.register(JuryRole, JuryRoleAdmin)
 # admin.site.register(Meeting, MeetingAdmin)
 admin.site.register(Defense, DefenseAdmin)

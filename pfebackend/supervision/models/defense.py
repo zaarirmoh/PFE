@@ -7,17 +7,7 @@ from teams.models import Team
 from themes.models import ThemeAssignment
 
 
-# class JuryRole(models.Model):
-#     """Model representing the role of a jury member."""
-#     name = models.CharField(_("Role Name"), max_length=100)
-#     description = models.TextField(_("Description"), blank=True)
-    
-#     def __str__(self):
-#         return self.name
-    
-#     class Meta:
-#         verbose_name = _("Jury Role")
-#         verbose_name_plural = _("Jury Roles")
+
 
 
 class Defense(TimeStampedModel):
@@ -107,20 +97,13 @@ class JuryMember(models.Model):
         related_name="jury_participations",
         verbose_name=_("User")
     )
-    # role = models.ForeignKey(
-    #     JuryRole,
-    #     on_delete=models.SET_NULL,
-    #     null=True,
-    #     related_name="jury_members",
-    #     verbose_name=_("Role")
-    # )
+
     is_president = models.BooleanField(_("Is President"), default=False)
     notes = models.TextField(_("Notes"), blank=True)
     
     def __str__(self):
-        role_info = f" ({self.role})" if self.role else ""
         president_info = " - President" if self.is_president else ""
-        return f"{self.user.get_full_name()}{role_info}{president_info}"
+        return f"{self.user.get_full_name()}{president_info}"
     
     class Meta:
         verbose_name = _("Jury Member")

@@ -206,7 +206,7 @@ def notify_upload(user, team_id, upload_title):
     recipients = get_supervisors_and_teachers(team_id)
     for recipient in recipients:
         NotificationService.create_and_send(
-            recipient=recipient.user,
+            recipient=recipient,
             content=f"New resource '{upload_title}' uploaded by {user.username}",
             notification_type="resource_upload",
             metadata={
