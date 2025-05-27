@@ -1,32 +1,54 @@
 from django.contrib import admin
 from unfold.admin import ModelAdmin
+from django.http import HttpResponseRedirect
 from unfold.decorators import action
 from .models import Timeline
 from teams.services import AutoTeamAssignmentService
 from django.contrib import messages
 from django.shortcuts import redirect
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.utils.translation import gettext_lazy as _
 
 # Register your models here.
 class TimelineAdmin(ModelAdmin):
     list_display = (
-        'timeline_type', 'academic_year', 'is_current', 'status'
+        'timeline_type', 'academic_year', 'status'
     )
     list_filter = ('is_active', 'timeline_type', 'academic_year')
     search_fields = ('name', 'description')
     readonly_fields = ('slug', 'timeline_type',)
     actions = ['trigger_auto_team_assignment']
     
-    fieldsets = (
-        ('Timeline', {
-            'fields': ('slug', 'name', 'description')
-        }),
-        ('Timing', {
-            'fields': ('start_date', 'end_date', 'is_active'),
-            'description': 'Set the time period for this timeline. Leave end date blank for open-ended timelines.'
-        }),
-    )
+    # fieldsets = (
+    #     ('Timing', {
+    #         'fields': ('start_date', 'end_date'),
+    #         'description': 'Set the time period for this timeline. Leave end date blank for open-ended timelines.'
+    #     }),
+    #     ('Timeline', {
+    #         'fields': ('name',)
+    #     }),
+    # )
+    def get_fieldsets(self, request, obj=None):
+        # Start with base fields that are always shown
+        fieldsets = [
+            ('Timing', {
+                'fields': ('start_date', 'end_date'),
+                'description': 'Set the time period for this timeline. Leave end date blank for open-ended timelines.'
+            }),
+            ('Timeline', {
+                'fields': ('name',),
+            }),
+        ]
+
+        # Add type-specific fields
+        if obj:  # Only if editing an existing object
+            if obj.timeline_type == 'groups':
+                fieldsets.append(('Team settings', {
+                    'fields': ('min_members', 'max_members',),
+                    'classes': ('collapse',)
+                }))
+        return fieldsets
+
     
     def trigger_auto_team_assignment(self, request, queryset):
         """Admin action to trigger auto team assignment for selected timelines."""
@@ -72,6 +94,12 @@ class TimelineAdmin(ModelAdmin):
         if db_field.name == 'slug':
             kwargs['disabled'] = True  # Disable the choice field
         return super().formfield_for_choice_field(db_field, request, **kwargs)
+    
+    def changelist_view(self, request, extra_context=None):
+        # Redirect to 2nd year timelines if no filter is applied
+        if 'academic_year__exact' not in request.GET:
+            return HttpResponseRedirect(f"{reverse('admin:timelines_timeline_changelist')}?academic_year__exact=2")
+        return super().changelist_view(request, extra_context)
     
     @action(description=_("action"), icon="hub")
     def changelist_action1(self, request):

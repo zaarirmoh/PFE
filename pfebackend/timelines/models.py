@@ -72,6 +72,15 @@ class Timeline(models.Model):
         help_text=_("Academic year this timeline applies to")
     )
     
+    min_members = models.PositiveIntegerField(
+        default=1,
+        help_text=_("Minimum number of members required for groups in this timeline")
+    )
+    max_members = models.PositiveIntegerField(
+        default=2,
+        help_text=_("Maximum number of members allowed in groups for this timeline")
+    )
+    
     class Meta:
         ordering = ['academic_year', 'start_date', 'timeline_type']
         verbose_name = _("Timeline")

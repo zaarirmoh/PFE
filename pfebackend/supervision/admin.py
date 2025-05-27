@@ -17,7 +17,7 @@ class JuryMemberInline(TabularInline):
 
 
 class DefenseAdmin(ModelAdmin):
-    list_display = ['title', 'theme_display', 'team_display', 'date', 'start_time', 'end_time', 'status']
+    list_display = ['title', 'theme_display', 'team_display', 'date', 'start_time', 'end_time']
     list_filter = ['date', 'status', 'theme_assignment__theme__academic_year']
     search_fields = ['title', 'theme_assignment__team__name', 'theme_assignment__theme__title']
     date_hierarchy = 'date'
@@ -26,17 +26,10 @@ class DefenseAdmin(ModelAdmin):
     
     fieldsets = (
         (None, {
-            'fields': ('title', 'theme_assignment', 'description')
+            'fields': ('title', 'theme_assignment')
         }),
         (_('Schedule'), {
             'fields': ('date', 'start_time', 'end_time', 'location', 'room')
-        }),
-        (_('Status and Result'), {
-            'fields': ('status', 'result', 'grade')
-        }),
-        (_('Audit Information'), {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',),
         }),
     )
     

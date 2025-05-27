@@ -157,7 +157,7 @@ class JuryMemberSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = JuryMember
-        fields = ['id', 'user', 'user_name', 'is_president', 'notes']
+        fields = ['id', 'user', 'user_name', 'is_president']
     
     def get_user_name(self, obj):
         return obj.user.get_full_name() or obj.user.username

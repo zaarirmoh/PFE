@@ -167,11 +167,11 @@ UNFOLD = {
             "page": "timelines",
             "models": ["timelines.timeline"],
             "items": [
-                {
-                    "title": _("All timelines"),
-                    # "icon": "sports_motorsports",
-                    "link": lambda request: f"{reverse_lazy('admin:timelines_timeline_changelist')}",
-                },
+                # {
+                #     "title": _("All timelines"),
+                #     # "icon": "sports_motorsports",
+                #     "link": lambda request: f"{reverse_lazy('admin:timelines_timeline_changelist')}",
+                # },
                 {
                     "title": _("2nd Year timelines"),
                     # "icon": "sports_motorsports",

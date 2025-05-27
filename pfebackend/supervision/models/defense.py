@@ -99,7 +99,7 @@ class JuryMember(models.Model):
     )
 
     is_president = models.BooleanField(_("Is President"), default=False)
-    notes = models.TextField(_("Notes"), blank=True)
+    # notes = models.TextField(_("Notes"), blank=True,null=True)
     
     def __str__(self):
         president_info = " - President" if self.is_president else ""

@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.db import transaction
 from django.shortcuts import redirect
 from .admin_filters import AcademicYearFilter
-from django.urls import reverse_lazy, path
+from django.urls import reverse_lazy, path, reverse
 from django.utils.translation import gettext_lazy as _
 from .admin_forms import CustomUserChangeForm, CustomUserCreationForm
 from .admin_inlines import (
@@ -17,6 +17,7 @@ from .admin_inlines import (
     AdministratorProfileInline,
     ExternalUserProfileInline,
 )
+from django.http import HttpResponseRedirect
 from users.models import User, Student, StudentSkill, ExcelUpload
 from users.serializers.base import BaseProfileSerializer
 from django.template.response import TemplateResponse
@@ -39,7 +40,7 @@ class CustomUserAdmin(BaseUserAdmin, ModelAdmin):
     
     list_display = ('email', 'username')
     exclude = ('password',)
-    list_filter = ('user_type', AcademicYearFilter)
+    list_filter =  (AcademicYearFilter,)
     
     # Set filter_horizontal to an empty tuple since we don't have groups or user_permissions
     filter_horizontal = ()
@@ -159,6 +160,12 @@ class CustomUserAdmin(BaseUserAdmin, ModelAdmin):
     @action(description=_("Import Students from Excel"), icon="upload")
     def import_students_action(self, request):
         return redirect('admin:users_user_import_students')
+    
+    def changelist_view(self, request, extra_context=None):
+        # Redirect to 2nd year timelines if no filter is applied
+        if 'user_type__exact' not in request.GET:
+            return HttpResponseRedirect(f"{reverse('admin:users_user_changelist')}?user_type__exact=administrator")
+        return super().changelist_view(request, extra_context)
         
     @action(description=_("action"), icon="hub")
     def changelist_action1(self, request):
